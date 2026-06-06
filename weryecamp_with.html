@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>여름사역 기도 계획 보고서 - PRAY WITH</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: '#1A4333',
+            gold: '#C5A028',
+            charcoal: '#2D3748',
+            warmwhite: '#FAF8F5'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #F3F1EC;
+      color: #2D3748;
+    }
+    /* A4 화면 시뮬레이션 스타일 */
+    .a4-page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 25mm;
+      margin: 40px auto;
+      background: #FFFFFF;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      border-radius: 4px;
+      position: relative;
+      box-sizing: border-box;
+    }
+    /* 프린트(PDF 출력) 전용 스타일 */
+    @media print {
+      body {
+        background: #FFFFFF !important;
+        color: #000000 !important;
+      }
+      .a4-page {
+        width: auto !important;
+        min-height: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      /* 페이지가 애매하게 끊기는 것 방지 */
+      section, table {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+
+ <!-- A4 문서 레이아웃 시작 -->
+  <div class="a4-page">
+    
+    <!-- 장식용 상단 얇은 바 -->
+    <div class="absolute top-0 left-0 right-0 h-2 bg-forest"></div>
+    <div class="absolute top-2 left-0 right-0 h-1 bg-gold"></div>
+
+    <!-- 1. 문서 타이틀 -->
+    <header class="text-center mt-6 mb-12">
+      <h1 class="text-forest text-5xl font-black tracking-tight leading-none mb-3">
+        PRAY WITH
+      </h1>
+      <p class="text-charcoal font-bold text-xl mb-2">
+        2026 유초등부 여름사역을 위한 기도 사역 계획
+      </p>
+      <p class="text-gold font-semibold text-lg">
+        - “함께(WITH)”를 위해 함께 기도하기 -
+      </p>
+      
+      <!-- 구분선 -->
+      <div class="w-full h-[2px] bg-forest/20 mt-8 mb-6"></div>
+    </header>
+
+    <!-- 2. 본문 내용 시작 -->
+    <main class="space-y-10 text-justify text-charcoal leading-relaxed text-[15px]">
+      
+      <!-- Section 1 -->
+      <section>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-2.5 h-6 bg-forest rounded-sm"></span>
+          <h2 class="text-forest text-xl font-bold">삶의 현장에서 기도해요</h2>
+        </div>
+        <hr class="border-forest/20 mb-4">
+        <p class="mb-6 text-gray-700 font-medium">
+          모든 교사와 스탭, 그리고 가정이 각자의 일상 속에서 일정한 시간대를 지키며 릴레이 형식으로 쉼 없이 기도의 자리를 채워가요.
+        </p>
+        
+        <div class="space-y-3 bg-gray-50 p-5 rounded-lg border border-gray-100">
+          <div class="flex items-baseline gap-2">
+            <span class="w-1.5 h-1.5 bg-gold rounded-full shrink-0"></span>
+            <p><strong>1차 기도 기간 (6/11 ~ 7/7) :</strong> 모든 교사 & 스탭진 참여</p>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <span class="w-1.5 h-1.5 bg-gold rounded-full shrink-0"></span>
+            <p><strong>2차 기도 기간 (7/8 ~ 8/4) :</strong> 교사, 스탭, 학부모 및 학생까지 확대 동참</p>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <span class="w-1.5 h-1.5 bg-gold rounded-full shrink-0"></span>
+            <p><strong>운영 방식 :</strong> 월요일~토요일, 오전 6시~오후 10시 중 각자 약속한 시간대에 가능한 시간만큼만 기도</p>
+          </div>
+        </div>
+
+        <div class="mt-6 p-4 border border-dashed border-forest/30 rounded-lg text-center bg-forest/5">
+          <p class="text-sm">릴레이 기도 시간 등록 : <a href="https://praywith.vercel.app/" target="_blank" class="text-blue-700 hover:underline font-semibold">https://praywith.vercel.app/</a></p>
+        </div>
+      </section>
+
+      <!-- Section 2 -->
+      <section>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-2.5 h-6 bg-forest rounded-sm"></span>
+          <h2 class="text-forest text-xl font-bold">예배당에서 함께 기도해요.</h2>
+        </div>
+        <hr class="border-forest/20 mb-4">
+
+        <!-- 표 양식 -->
+        <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm mt-4">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-forest text-white">
+                <th class="p-3.5 font-semibold border-b border-gray-200 w-1/4">구분</th>
+                <th class="p-3.5 font-semibold border-b border-gray-200 w-1/2">세부 내용</th>
+                <th class="p-3.5 font-semibold border-b border-gray-200 w-1/4">비고</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr class="hover:bg-gray-50/50">
+                <td class="p-3.5 font-bold text-forest">일시 및 시간</td>
+                <td class="p-3.5">매주 수요예배 후, 밤 9시 ~ 10시</td>
+                <td class="p-3.5 text-gray-500">시간 확인 필요</td>
+              </tr>
+              <tr class="hover:bg-gray-50/50 bg-gray-50/20">
+                <td class="p-3.5 font-bold text-forest">진행 기간</td>
+                <td class="p-3.5">6월 10일 ~ 7월 29일 (여름 사역 직전까지 집중 운영)</td>
+                <td class="p-3.5 text-gray-500">8/5은 출정식 (?)</td>
+              </tr>
+              <tr class="hover:bg-gray-50/50">
+                <td class="p-3.5 font-bold text-forest">장소</td>
+                <td class="p-3.5">조이홀 (or 드림홀)</td>
+                <td class="p-3.5 text-gray-500">장소 확인 필요</td>
+              </tr>
+              <tr class="hover:bg-gray-50/50 bg-gray-50/20">
+                <td class="p-3.5 font-bold text-forest">참여 대상</td>
+                <td class="p-3.5">[1차] 교사 & 스탭<br>[2차] 교사, 스탭, 학부모, 학생</td>
+                <td class="p-3.5 text-gray-500">손이음 기도회 방식 (?)</td>
+              </tr>
+              <tr class="hover:bg-gray-50/50">
+                <td class="p-3.5 font-bold text-forest">기도회 인도</td>
+                <td class="p-3.5">지건우 목사님 / 방원석 전도사님</td>
+                <td class="p-3.5 text-gray-500"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Section 3 -->
+      <section>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-2.5 h-6 bg-forest rounded-sm"></span>
+          <h2 class="text-forest text-xl font-bold">기도팀의 준비 사항</h2>
+        </div>
+        <hr class="border-forest/20 mb-4">
+
+        <div class="space-y-3">
+          <div class="flex items-start gap-3 bg-gray-50/80 p-4 rounded-lg border border-gray-100">
+            <span class="flex items-center justify-center bg-forest text-white w-6 h-6 rounded-full text-xs font-bold shrink-0 mt-0.5">1</span>
+            <div>
+              <p class="font-bold text-forest text-sm">여름사역 세부 기도 제목 취합</p>
+              <p class="text-xs text-gray-600 mt-1">예배, 공과, 활동, 안전 등 사역 전반의 구체적인 기도 목록 취합 및 정리</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 bg-gray-50/80 p-4 rounded-lg border border-gray-100">
+            <span class="flex items-center justify-center bg-forest text-white w-6 h-6 rounded-full text-xs font-bold shrink-0 mt-0.5">2</span>
+            <div>
+              <p class="font-bold text-forest text-sm">데일리 요일별 기도 카드 제작</p>
+              <p class="text-xs text-gray-600 mt-1">릴레이 기도자들이 깊이 있고 초점 있는 기도를 드릴 수 있도록 일자별/요일별 기도 카드를 사전 제작하여 단체 톡방에 정기 업로드</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 bg-gray-50/80 p-4 rounded-lg border border-gray-100">
+            <span class="flex items-center justify-center bg-forest text-white w-6 h-6 rounded-full text-xs font-bold shrink-0 mt-0.5">3</span>
+            <div>
+              <p class="font-bold text-forest text-sm">아이들 1:1 사진 중보카드 작성</p>
+              <p class="text-xs text-gray-600 mt-1">여름 캠프에 참가하는 위례 교회 및 전북 교회 유초등부 아이들 한 명 한 명의 얼굴 사진과 개인 맞춤형 기도 제목 리스트를 작성</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 하단 장식 -->
+    <footer class="mt-16 pt-6 border-t-2 border-forest/10 flex flex-col items-center justify-center text-xs text-gray-400">
+      <p class="font-medium text-forest/70">위례교회 예꿈유년부/예삶초등부</p>
+    </footer>
+
+  </div>
+
+</body>
+</html>
