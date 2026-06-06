@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PrayWith Schedule</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">PW</span>
+        <div>
+          <h1>PRAY WITH 기도 시간을 분양합니다~</h1>
+          <p id="connectionStatus">연결 확인 중</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="schedule-shell" aria-label="주간 일정표">
+        <div class="week-toolbar">
+          <div class="nav-group" aria-label="주간 이동">
+            <button class="icon-button" type="button" data-action="prev-week" aria-label="이전 주" title="이전 주">
+              <span aria-hidden="true">‹</span>
+            </button>
+            <button class="today-button" type="button" data-action="today">오늘</button>
+            <button class="icon-button" type="button" data-action="next-week" aria-label="다음 주" title="다음 주">
+              <span aria-hidden="true">›</span>
+            </button>
+          </div>
+
+          <div>
+            <p class="eyebrow">Weekly timetable</p>
+            <h2 id="weekRange">-</h2>
+          </div>
+
+          <button class="primary-button" type="button" data-action="add-event">일정 등록</button>
+        </div>
+
+        <div class="calendar-wrap">
+          <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="주간 시간표"></div>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="modal" id="eventDialog">
+      <form class="modal-panel" id="eventForm">
+        <div class="modal-header">
+          <h2>일정 등록</h2>
+          <button class="icon-button ghost" type="button" data-action="close-event" aria-label="닫기" title="닫기">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        <label class="field" id="singleDateField">
+          <span>날짜</span>
+          <input id="eventDate" name="date" type="date" required>
+        </label>
+
+        <label class="field" id="singleTimeField">
+          <span>시간</span>
+          <input id="eventTime" name="time" type="time" step="3600" max="22:00" required>
+        </label>
+
+        <label class="field">
+          <span>이름</span>
+          <input id="personName" name="personName" type="text" maxlength="80" autocomplete="off" required>
+        </label>
+
+        <label class="check-row repeat-toggle">
+          <input id="repeatEnabled" name="repeatEnabled" type="checkbox">
+          <span>반복 등록</span>
+        </label>
+
+        <div class="repeat-panel" id="repeatControls" hidden>
+          <p class="repeat-range">2026.06.08 - 2026.08.06</p>
+
+          <div class="repeat-date-grid">
+            <label class="field repeat-date-field">
+              <span>반복 시작일</span>
+              <input id="repeatStartDate" name="repeatStartDate" type="date" min="2026-06-08" max="2026-08-06">
+            </label>
+
+            <label class="field repeat-date-field">
+              <span>반복 종료일</span>
+              <input id="repeatEndDate" name="repeatEndDate" type="date" min="2026-06-08" max="2026-08-06">
+            </label>
+          </div>
+
+          <fieldset class="choice-field">
+            <legend>요일</legend>
+            <div class="choice-grid weekday-grid" id="repeatWeekdays"></div>
+          </fieldset>
+
+          <fieldset class="choice-field">
+            <legend>시간</legend>
+            <div class="choice-grid time-grid" id="repeatTimes"></div>
+          </fieldset>
+
+          <p class="repeat-summary" id="repeatSummary">요일과 시간을 선택해 주세요.</p>
+        </div>
+
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-action="close-event">취소</button>
+          <button class="primary-button" type="submit">저장</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="detailDialog">
+      <form class="modal-panel" method="dialog">
+        <div class="modal-header">
+          <h2 id="detailTitle">일정</h2>
+          <button class="icon-button ghost" type="button" data-action="close-detail" aria-label="닫기" title="닫기">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        <p class="detail-meta" id="detailMeta">-</p>
+
+        <label class="check-row">
+          <input id="detailCompleted" type="checkbox">
+          <span>완료</span>
+        </label>
+
+        <div class="modal-actions split">
+          <button class="danger-button" type="button" data-action="delete-current">삭제</button>
+          <button class="secondary-button" type="button" data-action="close-detail">닫기</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="confirmDialog">
+      <form class="modal-panel compact" method="dialog">
+        <div class="modal-header">
+          <h2>삭제 확인</h2>
+        </div>
+        <p class="confirm-copy" id="confirmCopy">선택한 일정을 삭제할까요?</p>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-action="cancel-delete">취소</button>
+          <button class="danger-button" type="button" data-action="confirm-delete">삭제</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>
