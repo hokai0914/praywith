@@ -106,7 +106,7 @@ function createEvents_(events) {
 function createEventRecord_(event, now, repeatOnly) {
   return {
     id: Utilities.getUuid(),
-    date: repeatOnly ? normalizeRepeatDate_(event.date) : normalizeDate_(event.date),
+    date: repeatOnly ? normalizeRepeatDate_(event.date) : normalizeRegistrationDate_(event.date),
     time: normalizeTime_(event.time),
     personName: normalizePersonName_(event.personName),
     completed: false,
@@ -215,10 +215,17 @@ function normalizeDate_(value) {
 }
 
 function normalizeRepeatDate_(value) {
-  const date = normalizeDate_(value);
+  const date = normalizeRegistrationDate_(value);
   if (date < REPEAT_START_DATE || date > REPEAT_END_DATE) {
     throw new Error('Repeat date is out of range.');
   }
+  return date;
+}
+
+function normalizeRegistrationDate_(value) {
+  const date = normalizeDate_(value);
+  const day = new Date(`${date}T00:00:00`).getDay();
+  if (day === 0) throw new Error('Sunday cannot be selected.');
   return date;
 }
 

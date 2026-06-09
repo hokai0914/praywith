@@ -2,7 +2,7 @@ const CLIENT_CONFIG = {
   apiUrl: "https://script.google.com/macros/s/AKfycbxz5I3jXE3T6lto2drCwshiE_pUbBKUFJyu4ABJh_-ve5fS3qG1huLyUrgTIA5M1ZpZ9w/exec",
 };
 
-const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
+const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 const DEFAULT_START_HOUR = 6;
 const REGISTRATION_END_HOUR = 22;
 const REGISTRATION_END_TIME = "22:00";
@@ -10,13 +10,13 @@ const DEFAULT_END_HOUR = REGISTRATION_END_HOUR;
 const REPEAT_START_DATE = "2026-06-08";
 const REPEAT_END_DATE = "2026-08-06";
 const REPEAT_WEEKDAYS = [
+  { value: 0, label: "일", disabled: true },
   { value: 1, label: "월" },
   { value: 2, label: "화" },
   { value: 3, label: "수" },
   { value: 4, label: "목" },
   { value: 5, label: "금" },
   { value: 6, label: "토" },
-  { value: 0, label: "일" },
 ];
 
 const state = {
@@ -102,7 +102,7 @@ function renderRepeatControls() {
 
   els.repeatWeekdays.innerHTML = "";
   REPEAT_WEEKDAYS.forEach((weekday) => {
-    els.repeatWeekdays.append(createChoice("repeatWeekdays", String(weekday.value), weekday.label));
+    els.repeatWeekdays.append(createChoice("repeatWeekdays", String(weekday.value), weekday.label, weekday.disabled));
   });
 
   els.repeatTimes.innerHTML = "";
@@ -112,12 +112,14 @@ function renderRepeatControls() {
   }
 }
 
-function createChoice(name, value, label) {
-  const wrapper = createElement("label", "choice-pill");
+function createChoice(name, value, label, disabled = false) {
+  const wrapper = createElement("label", `choice-pill${disabled ? " is-disabled" : ""}`);
   const input = document.createElement("input");
   input.type = "checkbox";
   input.name = name;
   input.value = value;
+  input.disabled = disabled;
+  if (disabled) input.dataset.alwaysDisabled = "true";
   const text = createElement("span", "", label);
   wrapper.append(input, text);
   return wrapper;
@@ -159,7 +161,7 @@ function getApiUrl() {
 function setLoading(isLoading) {
   state.loading = isLoading;
   document.querySelectorAll("button, input").forEach((control) => {
-    control.disabled = isLoading || isFormModeDisabled(control);
+    control.disabled = control.dataset.alwaysDisabled === "true" || isLoading || isFormModeDisabled(control);
   });
 }
 
@@ -252,16 +254,18 @@ function renderCalendar(days) {
 }
 
 function createSlot(date, time) {
-  const slot = createElement("div", "slot");
+  const canRegister = isRegistrationSlot(date, time);
+  const slot = createElement("div", `slot${canRegister ? "" : " is-disabled"}`);
   slot.setAttribute("role", "gridcell");
 
   const slotButton = createElement("button", "slot-button");
   slotButton.type = "button";
   slotButton.setAttribute("aria-label", `${date} ${time} 일정 등록`);
-  if (isRegistrationTime(time)) {
+  if (canRegister) {
     slotButton.addEventListener("click", () => openEventDialog(date, time));
   } else {
     slotButton.disabled = true;
+    slotButton.dataset.alwaysDisabled = "true";
     slotButton.setAttribute("aria-disabled", "true");
   }
   slot.append(slotButton);
@@ -334,6 +338,10 @@ function openEventDialog(date, time) {
     showToast("공유 연결이 설정되지 않아 등록할 수 없습니다.", "error");
     return;
   }
+  if (!isRegistrationDate(date)) {
+    showToast("일요일은 선택할 수 없습니다.", "error");
+    return;
+  }
 
   els.eventForm.reset();
   els.eventDate.value = date;
@@ -375,6 +383,10 @@ async function submitEventForm(event) {
 
   if (!payload.date || !payload.time || !payload.personName) {
     showToast("날짜, 시간, 이름을 입력해 주세요.", "error");
+    return;
+  }
+  if (!isRegistrationDate(payload.date)) {
+    showToast("일요일은 선택할 수 없습니다.", "error");
     return;
   }
 
@@ -587,7 +599,7 @@ function buildRepeatEvents(personName, weekdays, times, startDate = REPEAT_START
   const lastDate = parseDate(endDate);
 
   while (date <= lastDate) {
-    if (selectedWeekdays.has(date.getDay())) {
+    if (selectedWeekdays.has(date.getDay()) && isRegistrationDate(formatDate(date))) {
       const dateKey = formatDate(date);
       selectedTimes.forEach((time) => {
         events.push({ date: dateKey, time, personName });
@@ -626,9 +638,7 @@ function formatDateLabel(dateKey) {
 
 function startOfWeek(date) {
   const local = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const day = local.getDay();
-  const mondayOffset = day === 0 ? -6 : 1 - day;
-  local.setDate(local.getDate() + mondayOffset);
+  local.setDate(local.getDate() - local.getDay());
   return local;
 }
 
@@ -690,6 +700,14 @@ function isTimeKey(value) {
 function isRegistrationTime(value) {
   if (!isTimeKey(value)) return false;
   return Number.parseInt(value.slice(0, 2), 10) <= REGISTRATION_END_HOUR;
+}
+
+function isRegistrationSlot(date, time) {
+  return isRegistrationDate(date) && isRegistrationTime(time);
+}
+
+function isRegistrationDate(dateKey) {
+  return isDateKey(dateKey) && parseDate(dateKey).getDay() !== 0;
 }
 
 function createElement(tagName, className, text) {
