@@ -4,42 +4,79 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>PrayWith Schedule</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css">
     <link rel="stylesheet" href="styles.css">
+    <script>
+      window.tailwind = window.tailwind || {};
+      window.tailwind.config = {
+        corePlugins: { preflight: false },
+        theme: {
+          extend: {
+            colors: {
+              pray: {
+                ink: "#1f2a24",
+                muted: "#647067",
+                green: "#2f7d58",
+                deep: "#1f6545",
+                mist: "#eef7f0",
+                warm: "#fff8ed"
+              }
+            },
+            boxShadow: {
+              soft: "0 18px 48px rgba(31, 42, 36, 0.12)",
+              lift: "0 12px 28px rgba(47, 125, 88, 0.18)"
+            },
+            fontFamily: {
+              sans: [
+                "Pretendard Variable",
+                "Pretendard",
+                "Inter",
+                "ui-sans-serif",
+                "system-ui",
+                "sans-serif"
+              ]
+            }
+          }
+        }
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="app.js"></script>
   </head>
-  <body>
+  <body class="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(47,125,88,0.14),_transparent_34rem),linear-gradient(180deg,#faf8f1_0%,#f6f7f1_48%,#eef6ef_100%)] font-sans text-pray-ink antialiased">
     <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
-    <header class="app-header">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true">PW</span>
+    <header class="app-header mx-auto flex w-full max-w-[1600px] items-center justify-between gap-5 px-4 py-5 sm:px-8 lg:px-10">
+      <div class="brand flex min-w-0 items-center gap-3">
+        <span class="brand-mark grid h-12 w-12 place-items-center rounded-lg bg-pray-green text-sm font-extrabold text-white shadow-lift" aria-hidden="true">PW</span>
         <div>
-          <h1>PRAY WITH 기도 시간을 분양합니다~</h1>
-          <p id="connectionStatus">연결 확인 중</p>
+          <h1 class="text-[1.55rem] font-extrabold leading-tight tracking-normal sm:text-3xl">PRAY WITH 기도 시간을 분양합니다~</h1>
+          <p class="mt-1 text-sm font-semibold text-pray-muted" id="connectionStatus">연결 확인 중</p>
         </div>
       </div>
-      <img class="header-logo" src="werye_logo.png" alt="Werye">
+      <img class="header-logo h-auto w-24 shrink-0 sm:w-32 lg:w-36" src="werye_logo.png" alt="Werye">
     </header>
 
-    <main class="app-main">
-      <section class="schedule-shell" aria-label="주간 일정표">
-        <div class="week-toolbar">
-          <div class="nav-group" aria-label="주간 이동">
-            <button class="icon-button" type="button" data-action="prev-week" aria-label="이전 주" title="이전 주">
+    <main class="app-main mx-auto w-full max-w-[1600px] px-3 pb-8 sm:px-8">
+      <section class="schedule-shell overflow-hidden rounded-lg border border-white/70 bg-white/85 shadow-soft ring-1 ring-black/5 backdrop-blur" aria-label="주간 일정표">
+        <div class="week-toolbar grid items-center gap-4 border-b border-slate-200/70 bg-white/75 p-4 backdrop-blur md:grid-cols-[auto_minmax(180px,1fr)_auto]">
+          <div class="nav-group flex items-center gap-2" aria-label="주간 이동">
+            <button class="icon-button grid h-10 w-10 place-items-center rounded-lg border border-slate-200 bg-white/90 text-xl font-bold text-pray-ink shadow-sm transition hover:border-pray-green/30 hover:bg-pray-mist hover:shadow" type="button" data-action="prev-week" aria-label="이전 주" title="이전 주">
               <span aria-hidden="true">‹</span>
             </button>
-            <button class="today-button" type="button" data-action="today">오늘</button>
-            <button class="icon-button" type="button" data-action="next-week" aria-label="다음 주" title="다음 주">
+            <button class="today-button h-10 rounded-lg border border-slate-200 bg-white/90 px-4 text-sm font-bold text-pray-ink shadow-sm transition hover:border-pray-green/30 hover:bg-pray-mist hover:shadow" type="button" data-action="today">오늘</button>
+            <button class="icon-button grid h-10 w-10 place-items-center rounded-lg border border-slate-200 bg-white/90 text-xl font-bold text-pray-ink shadow-sm transition hover:border-pray-green/30 hover:bg-pray-mist hover:shadow" type="button" data-action="next-week" aria-label="다음 주" title="다음 주">
               <span aria-hidden="true">›</span>
             </button>
           </div>
 
-          <div>
-            <p class="eyebrow">Weekly timetable</p>
-            <h2 id="weekRange">-</h2>
+          <div class="min-w-0">
+            <p class="eyebrow text-xs font-bold uppercase tracking-wide text-pray-green/80">Weekly timetable</p>
+            <h2 class="text-xl font-extrabold leading-tight text-pray-ink" id="weekRange">-</h2>
           </div>
 
-          <button class="primary-button" type="button" data-action="add-event">일정 등록</button>
+          <button class="primary-button h-10 rounded-lg bg-pray-green px-5 text-sm font-bold text-white shadow-lift transition hover:bg-pray-deep" type="button" data-action="add-event">일정 등록</button>
         </div>
 
         <div class="calendar-wrap">
@@ -49,46 +86,46 @@
     </main>
 
     <dialog class="modal" id="eventDialog">
-      <form class="modal-panel" id="eventForm">
-        <div class="modal-header">
-          <h2>일정 등록</h2>
-          <button class="icon-button ghost" type="button" data-action="close-event" aria-label="닫기" title="닫기">
+      <form class="modal-panel rounded-lg border border-white/80 bg-white/95 p-5 shadow-soft ring-1 ring-black/5 backdrop-blur" id="eventForm">
+        <div class="modal-header flex items-center justify-between gap-3">
+          <h2 class="text-xl font-extrabold text-pray-ink">일정 등록</h2>
+          <button class="icon-button ghost grid h-10 w-10 place-items-center rounded-lg text-xl font-bold text-pray-muted transition hover:bg-pray-mist hover:text-pray-ink" type="button" data-action="close-event" aria-label="닫기" title="닫기">
             <span aria-hidden="true">×</span>
           </button>
         </div>
 
         <label class="field" id="singleDateField">
           <span>날짜</span>
-          <input id="eventDate" name="date" type="date" required>
+          <input class="rounded-lg border-slate-300 bg-white px-3 shadow-sm focus:border-pray-green focus:ring-4 focus:ring-pray-green/15" id="eventDate" name="date" type="date" required>
         </label>
 
         <label class="field" id="singleTimeField">
           <span>시간</span>
-          <input id="eventTime" name="time" type="time" step="3600" max="22:00" required>
+          <input class="rounded-lg border-slate-300 bg-white px-3 shadow-sm focus:border-pray-green focus:ring-4 focus:ring-pray-green/15" id="eventTime" name="time" type="time" step="3600" max="22:00" required>
         </label>
 
         <label class="field">
           <span>이름</span>
-          <input id="personName" name="personName" type="text" maxlength="80" autocomplete="off" required>
+          <input class="rounded-lg border-slate-300 bg-white px-3 shadow-sm focus:border-pray-green focus:ring-4 focus:ring-pray-green/15" id="personName" name="personName" type="text" maxlength="80" autocomplete="off" required>
         </label>
 
-        <label class="check-row repeat-toggle">
-          <input id="repeatEnabled" name="repeatEnabled" type="checkbox">
+        <label class="check-row repeat-toggle rounded-lg border border-slate-200 bg-pray-mist/70 px-3 py-2">
+          <input class="accent-pray-green" id="repeatEnabled" name="repeatEnabled" type="checkbox">
           <span>반복 등록</span>
         </label>
 
-        <div class="repeat-panel" id="repeatControls" hidden>
-          <p class="repeat-range">2026.06.08 - 2026.08.06</p>
+        <div class="repeat-panel rounded-lg border border-pray-green/10 bg-gradient-to-b from-pray-warm/80 to-pray-mist/70 p-4" id="repeatControls" hidden>
+          <p class="repeat-range rounded-full border border-pray-green/15 bg-pray-mist px-3 py-1 text-xs font-bold text-pray-deep">2026.06.08 - 2026.08.06</p>
 
           <div class="repeat-date-grid">
             <label class="field repeat-date-field">
               <span>반복 시작일</span>
-              <input id="repeatStartDate" name="repeatStartDate" type="date" min="2026-06-08" max="2026-08-06">
+              <input class="rounded-lg border-slate-300 bg-white px-3 shadow-sm focus:border-pray-green focus:ring-4 focus:ring-pray-green/15" id="repeatStartDate" name="repeatStartDate" type="date" min="2026-06-08" max="2026-08-06">
             </label>
 
             <label class="field repeat-date-field">
               <span>반복 종료일</span>
-              <input id="repeatEndDate" name="repeatEndDate" type="date" min="2026-06-08" max="2026-08-06">
+              <input class="rounded-lg border-slate-300 bg-white px-3 shadow-sm focus:border-pray-green focus:ring-4 focus:ring-pray-green/15" id="repeatEndDate" name="repeatEndDate" type="date" min="2026-06-08" max="2026-08-06">
             </label>
           </div>
 
@@ -102,48 +139,48 @@
             <div class="choice-grid time-grid" id="repeatTimes"></div>
           </fieldset>
 
-          <p class="repeat-summary" id="repeatSummary">요일과 시간을 선택해 주세요.</p>
+          <p class="repeat-summary rounded-lg bg-white/60 px-3 py-2 text-sm font-bold text-pray-muted" id="repeatSummary">요일과 시간을 선택해 주세요.</p>
         </div>
 
-        <div class="modal-actions">
-          <button class="secondary-button" type="button" data-action="close-event">취소</button>
-          <button class="primary-button" type="submit">저장</button>
+        <div class="modal-actions flex justify-end gap-2">
+          <button class="secondary-button h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-pray-ink shadow-sm transition hover:bg-pray-mist" type="button" data-action="close-event">취소</button>
+          <button class="primary-button h-10 rounded-lg bg-pray-green px-5 text-sm font-bold text-white shadow-lift transition hover:bg-pray-deep" type="submit">저장</button>
         </div>
       </form>
     </dialog>
 
     <dialog class="modal" id="detailDialog">
-      <form class="modal-panel" method="dialog">
-        <div class="modal-header">
-          <h2 id="detailTitle">일정</h2>
-          <button class="icon-button ghost" type="button" data-action="close-detail" aria-label="닫기" title="닫기">
+      <form class="modal-panel rounded-lg border border-white/80 bg-white/95 p-5 shadow-soft ring-1 ring-black/5 backdrop-blur" method="dialog">
+        <div class="modal-header flex items-center justify-between gap-3">
+          <h2 class="text-xl font-extrabold text-pray-ink" id="detailTitle">일정</h2>
+          <button class="icon-button ghost grid h-10 w-10 place-items-center rounded-lg text-xl font-bold text-pray-muted transition hover:bg-pray-mist hover:text-pray-ink" type="button" data-action="close-detail" aria-label="닫기" title="닫기">
             <span aria-hidden="true">×</span>
           </button>
         </div>
 
-        <p class="detail-meta" id="detailMeta">-</p>
+        <p class="detail-meta rounded-lg bg-pray-mist/70 px-3 py-2 text-sm font-bold text-pray-muted" id="detailMeta">-</p>
 
-        <label class="check-row">
-          <input id="detailCompleted" type="checkbox">
+        <label class="check-row rounded-lg border border-slate-200 bg-white px-3 py-2">
+          <input class="accent-pray-green" id="detailCompleted" type="checkbox">
           <span>완료</span>
         </label>
 
-        <div class="modal-actions split">
-          <button class="danger-button" type="button" data-action="delete-current">삭제</button>
-          <button class="secondary-button" type="button" data-action="close-detail">닫기</button>
+        <div class="modal-actions split flex justify-between gap-2">
+          <button class="danger-button h-10 rounded-lg bg-red-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-red-700" type="button" data-action="delete-current">삭제</button>
+          <button class="secondary-button h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-pray-ink shadow-sm transition hover:bg-pray-mist" type="button" data-action="close-detail">닫기</button>
         </div>
       </form>
     </dialog>
 
     <dialog class="modal" id="confirmDialog">
-      <form class="modal-panel compact" method="dialog">
+      <form class="modal-panel compact rounded-lg border border-white/80 bg-white/95 p-5 shadow-soft ring-1 ring-black/5 backdrop-blur" method="dialog">
         <div class="modal-header">
-          <h2>삭제 확인</h2>
+          <h2 class="text-xl font-extrabold text-pray-ink">삭제 확인</h2>
         </div>
-        <p class="confirm-copy" id="confirmCopy">선택한 일정을 삭제할까요?</p>
-        <div class="modal-actions">
-          <button class="secondary-button" type="button" data-action="cancel-delete">취소</button>
-          <button class="danger-button" type="button" data-action="confirm-delete">삭제</button>
+        <p class="confirm-copy rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-red-800" id="confirmCopy">선택한 일정을 삭제할까요?</p>
+        <div class="modal-actions flex justify-end gap-2">
+          <button class="secondary-button h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-pray-ink shadow-sm transition hover:bg-pray-mist" type="button" data-action="cancel-delete">취소</button>
+          <button class="danger-button h-10 rounded-lg bg-red-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-red-700" type="button" data-action="confirm-delete">삭제</button>
         </div>
       </form>
     </dialog>
