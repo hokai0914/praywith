@@ -123,6 +123,18 @@ input:focus-visible {
   letter-spacing: 0;
 }
 
+.brand-title {
+  font-family:
+    "Pretendard Variable",
+    "Pretendard",
+    "Inter",
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
 .brand p {
   margin: 6px 0 0;
   color: var(--muted);

@@ -260,7 +260,7 @@ function createSlot(date, time) {
 
   const slotButton = createElement("button", "slot-button");
   slotButton.type = "button";
-  slotButton.setAttribute("aria-label", `${date} ${time} 일정 등록`);
+  slotButton.setAttribute("aria-label", `${date} ${time} 릴레이 기도 등록`);
   if (canRegister) {
     slotButton.addEventListener("click", () => openEventDialog(date, time));
   } else {
@@ -399,7 +399,7 @@ async function submitEventForm(event) {
     showToast("일정을 등록했습니다.");
     render();
   } catch (error) {
-    showToast(error.message || "일정 등록에 실패했습니다.", "error");
+    showToast(error.message || "릴레이 기도 등록에 실패했습니다.", "error");
   } finally {
     setLoading(false);
   }
@@ -437,7 +437,7 @@ async function submitRepeatEventForm(personName) {
     showToast(`${createdEvents.length}개 일정을 등록했습니다.`);
     render();
   } catch (error) {
-    showToast(error.message || "반복 일정 등록에 실패했습니다.", "error");
+    showToast(error.message || "반복 릴레이 기도 등록에 실패했습니다.", "error");
   } finally {
     setLoading(false);
   }
