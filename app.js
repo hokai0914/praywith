@@ -36,6 +36,7 @@ const state = {
 };
 
 const els = {
+  calendarWrap: document.querySelector(".calendar-wrap"),
   calendarGrid: document.querySelector("#calendarGrid"),
   periodRange: document.querySelector("#periodRange"),
   periodEyebrow: document.querySelector("#periodEyebrow"),
@@ -262,6 +263,7 @@ function render() {
     renderWeek();
   }
   if (els.dayDialog.open && state.selectedDate) renderDayDialog(state.selectedDate);
+  centerTodayOnMobile();
 }
 
 function renderWeek() {
@@ -292,6 +294,36 @@ function updateViewButtons() {
   });
 }
 
+function centerTodayOnMobile() {
+  if (!window.matchMedia("(max-width: 760px)").matches) return;
+
+  window.requestAnimationFrame(() => {
+    const todayTarget = els.calendarGrid.querySelector(`[data-date="${formatDate(new Date())}"]`);
+    if (!todayTarget) return;
+
+    const leftInset = state.viewMode === VIEW_MODES.WEEK ? els.calendarGrid.querySelector(".corner")?.offsetWidth || 0 : 0;
+    const visibleWidth = Math.max(1, els.calendarWrap.clientWidth - leftInset);
+    const left = todayTarget.offsetLeft + todayTarget.offsetWidth / 2 - leftInset - visibleWidth / 2;
+
+    const scrollOptions = {
+      left: clampScroll(left, els.calendarWrap.scrollWidth - els.calendarWrap.clientWidth),
+    };
+
+    if (state.viewMode === VIEW_MODES.MONTH) {
+      const topInset = els.calendarGrid.querySelector(".month-weekday-head")?.offsetHeight || 0;
+      const visibleHeight = Math.max(1, els.calendarWrap.clientHeight - topInset);
+      const top = todayTarget.offsetTop + todayTarget.offsetHeight / 2 - topInset - visibleHeight / 2;
+      scrollOptions.top = clampScroll(top, els.calendarWrap.scrollHeight - els.calendarWrap.clientHeight);
+    }
+
+    els.calendarWrap.scrollTo(scrollOptions);
+  });
+}
+
+function clampScroll(value, maxValue) {
+  return Math.min(Math.max(0, value), Math.max(0, maxValue));
+}
+
 function renderWeekCalendar(days) {
   els.calendarGrid.innerHTML = "";
   const hours = getVisibleHours();
@@ -302,6 +334,7 @@ function renderWeekCalendar(days) {
     const dayKey = formatDate(day);
     const head = createElement("div", `day-head${dayKey === todayKey ? " is-today" : ""}`);
     head.setAttribute("role", "columnheader");
+    head.dataset.date = dayKey;
     head.innerHTML = `
       <span class="day-name">${DAY_LABELS[index]}</span>
       <span class="day-date">${day.getMonth() + 1}/${day.getDate()}</span>
@@ -358,6 +391,7 @@ function createMonthDayCell(day, options) {
   ].filter(Boolean).join(" ");
   const cell = createElement("div", className);
   cell.setAttribute("role", "gridcell");
+  cell.dataset.date = date;
 
   const dayButton = createElement("button", "month-day-button");
   dayButton.type = "button";

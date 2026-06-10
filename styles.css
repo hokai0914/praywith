@@ -1036,17 +1036,44 @@ input:focus-visible {
 }
 
 @media (max-width: 760px) {
-  .app-header {
-    align-items: flex-start;
-    padding-top: 16px;
+  :root {
+    --slot-height: 60px;
   }
 
-  .header-logo {
-    width: 96px;
+  body .app-header {
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px 6px;
   }
 
-  .week-toolbar {
-    grid-template-columns: minmax(0, 1fr);
+  .brand {
+    gap: 8px;
+  }
+
+  body .brand-mark {
+    width: 34px;
+    height: 34px;
+    font-size: 11px;
+  }
+
+  .brand h1 {
+    font-size: 18px;
+    line-height: 1.12;
+  }
+
+  .brand p {
+    margin-top: 2px;
+    font-size: 12px;
+  }
+
+  body .header-logo {
+    width: 70px;
+  }
+
+  body .week-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 8px;
   }
 
   .week-toolbar > div:nth-child(2) {
@@ -1060,59 +1087,134 @@ input:focus-visible {
   }
 
   .view-switch {
-    grid-column: 1;
-    grid-row: 3;
-    justify-self: start;
-    width: min(100%, 180px);
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    width: 128px;
   }
 
-  .week-toolbar > .primary-button {
-    grid-column: 1;
-    grid-row: 4;
-    justify-self: start;
-    width: min(100%, 320px);
-    max-width: calc(100vw - 60px);
+  body .week-toolbar > .primary-button {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    width: auto;
+    max-width: 150px;
   }
 
-  .calendar-wrap {
-    max-height: calc(100vh - 220px);
+  .eyebrow {
+    display: none;
+  }
+
+  .week-toolbar h2 {
+    font-size: 17px;
+  }
+
+  .icon-button,
+  .today-button,
+  .primary-button,
+  .secondary-button,
+  .danger-button {
+    height: 34px;
+    min-height: 34px;
+  }
+
+  body .icon-button {
+    width: 34px;
+    height: 34px;
+    font-size: 20px;
+  }
+
+  body .today-button,
+  body .primary-button {
+    padding-right: 10px;
+    padding-left: 10px;
+    font-size: 13px;
+  }
+
+  .view-switch {
+    min-height: 34px;
+    padding: 2px;
+  }
+
+  .view-button {
+    min-height: 28px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+
+  .corner,
+  .day-head {
+    min-height: 52px;
+  }
+
+  .day-head {
+    padding: 8px 10px;
+  }
+
+  .day-date {
+    font-size: 18px;
+  }
+
+  .month-weekday-head {
+    min-height: 36px;
+    padding: 8px 10px;
+  }
+
+  .month-day-cell {
+    min-height: 118px;
+  }
+
+  body .app-main {
+    padding-right: 6px;
+    padding-left: 6px;
+    padding-bottom: 10px;
+  }
+
+  body .calendar-wrap {
+    max-height: calc(100vh - 128px);
+    min-height: calc(100vh - 128px);
   }
 }
 
 @media (max-width: 460px) {
   :root {
+    --slot-height: 56px;
     --time-width: 64px;
     --day-width: 132px;
     --month-day-width: 118px;
   }
 
   .brand h1 {
-    font-size: 22px;
+    font-size: 16px;
   }
 
   .brand p {
-    font-size: 13px;
+    font-size: 11px;
   }
 
-  .app-header {
-    flex-wrap: wrap;
+  body .app-header {
+    flex-wrap: nowrap;
   }
 
-  .header-logo {
-    width: 88px;
-    margin-left: 56px;
+  body .header-logo {
+    width: 58px;
+    margin-left: 0;
   }
 
-  .week-toolbar {
-    padding: 12px;
+  body .week-toolbar {
+    padding: 7px;
   }
 
   .primary-button,
   .secondary-button,
   .danger-button,
   .today-button {
-    padding-right: 12px;
-    padding-left: 12px;
+    padding-right: 9px;
+    padding-left: 9px;
+  }
+
+  .month-day-cell {
+    min-height: 108px;
   }
 
   .repeat-date-grid {
