@@ -1,11 +1,11 @@
-# PrayWith Weekly Schedule
+# PrayWith Schedule
 
-순수 HTML/CSS/JavaScript로 만든 주간 시간표형 일정 체크 웹앱입니다. 모든 사용자는 고정된 Apps Script Web App URL을 통해 같은 Google Sheets `Schedules` 탭의 일정을 함께 봅니다.
+순수 HTML/CSS/JavaScript로 만든 주간/월간 일정 체크 웹앱입니다. 모든 사용자는 고정된 Apps Script Web App URL을 통해 같은 Google Sheets `Schedules` 탭의 일정을 함께 봅니다.
 
 ## 파일 구성
 
 - `index.html`: 화면 구조
-- `styles.css`: 주간 시간표 UI
+- `styles.css`: 주간 시간표 및 월간 달력 UI
 - `app.js`: 캘린더 렌더링, 등록, 삭제, 완료 체크, Apps Script API 통신
 - `apps-script/Code.gs`: Google Apps Script 백엔드
 

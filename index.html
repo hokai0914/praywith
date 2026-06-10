@@ -59,21 +59,26 @@
     </header>
 
     <main class="app-main mx-auto w-full max-w-[1600px] px-3 pb-8 sm:px-8">
-      <section class="schedule-shell overflow-hidden rounded-lg border border-white/70 bg-white/85 shadow-soft ring-1 ring-black/5 backdrop-blur" aria-label="주간 일정표">
-        <div class="week-toolbar grid items-center gap-4 border-b border-slate-200/70 bg-white/75 p-4 backdrop-blur md:grid-cols-[auto_minmax(180px,1fr)_auto]">
-          <div class="nav-group flex items-center gap-2" aria-label="주간 이동">
-            <button class="icon-button grid h-10 w-10 place-items-center rounded-lg border border-slate-200 bg-white/90 text-xl font-bold text-pray-ink shadow-sm transition hover:border-pray-green/30 hover:bg-pray-mist hover:shadow" type="button" data-action="prev-week" aria-label="이전 주" title="이전 주">
+      <section class="schedule-shell overflow-hidden rounded-lg border border-white/70 bg-white/85 shadow-soft ring-1 ring-black/5 backdrop-blur" aria-label="일정표">
+        <div class="week-toolbar grid items-center gap-4 border-b border-slate-200/70 bg-white/75 p-4 backdrop-blur md:grid-cols-[auto_minmax(180px,1fr)_auto_auto]">
+          <div class="nav-group flex items-center gap-2" aria-label="기간 이동">
+            <button class="icon-button grid h-10 w-10 place-items-center rounded-lg border border-slate-200 bg-white/90 text-xl font-bold text-pray-ink shadow-sm transition hover:border-pray-green/30 hover:bg-pray-mist hover:shadow" type="button" data-action="prev-period" aria-label="이전 기간" title="이전 기간">
               <span aria-hidden="true">‹</span>
             </button>
             <button class="today-button h-10 rounded-lg border border-slate-200 bg-white/90 px-4 text-sm font-bold text-pray-ink shadow-sm transition hover:border-pray-green/30 hover:bg-pray-mist hover:shadow" type="button" data-action="today">오늘</button>
-            <button class="icon-button grid h-10 w-10 place-items-center rounded-lg border border-slate-200 bg-white/90 text-xl font-bold text-pray-ink shadow-sm transition hover:border-pray-green/30 hover:bg-pray-mist hover:shadow" type="button" data-action="next-week" aria-label="다음 주" title="다음 주">
+            <button class="icon-button grid h-10 w-10 place-items-center rounded-lg border border-slate-200 bg-white/90 text-xl font-bold text-pray-ink shadow-sm transition hover:border-pray-green/30 hover:bg-pray-mist hover:shadow" type="button" data-action="next-period" aria-label="다음 기간" title="다음 기간">
               <span aria-hidden="true">›</span>
             </button>
           </div>
 
           <div class="min-w-0">
-            <p class="eyebrow text-xs font-bold uppercase tracking-wide text-pray-green/80">Weekly timetable</p>
-            <h2 class="text-xl font-extrabold leading-tight text-pray-ink" id="weekRange">-</h2>
+            <p class="eyebrow text-xs font-bold uppercase tracking-wide text-pray-green/80" id="periodEyebrow">Weekly timetable</p>
+            <h2 class="text-xl font-extrabold leading-tight text-pray-ink" id="periodRange">-</h2>
+          </div>
+
+          <div class="view-switch" role="group" aria-label="보기 방식">
+            <button class="view-button is-active" type="button" data-action="set-view" data-view="week" aria-pressed="true">주간</button>
+            <button class="view-button" type="button" data-action="set-view" data-view="month" aria-pressed="false">월간</button>
           </div>
 
           <button class="primary-button h-10 rounded-lg bg-pray-green px-5 text-sm font-bold text-white shadow-lift transition hover:bg-pray-deep" type="button" data-action="add-event">릴레이 기도 등록</button>
@@ -145,6 +150,29 @@
         <div class="modal-actions flex justify-end gap-2">
           <button class="secondary-button h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-pray-ink shadow-sm transition hover:bg-pray-mist" type="button" data-action="close-event">취소</button>
           <button class="primary-button h-10 rounded-lg bg-pray-green px-5 text-sm font-bold text-white shadow-lift transition hover:bg-pray-deep" type="submit">저장</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal day-modal" id="dayDialog">
+      <form class="modal-panel rounded-lg border border-white/80 bg-white/95 p-5 shadow-soft ring-1 ring-black/5 backdrop-blur" method="dialog">
+        <div class="modal-header flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <h2 class="text-xl font-extrabold text-pray-ink" id="dayTitle">일정 목록</h2>
+            <p class="day-meta text-sm font-bold text-pray-muted" id="dayMeta">-</p>
+          </div>
+          <button class="icon-button ghost grid h-10 w-10 place-items-center rounded-lg text-xl font-bold text-pray-muted transition hover:bg-pray-mist hover:text-pray-ink" type="button" data-action="close-day" aria-label="닫기" title="닫기">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        <div class="day-schedule-wrap">
+          <div class="day-schedule-grid" id="dayEventList" role="grid" aria-label="날짜별 시간표"></div>
+        </div>
+
+        <div class="modal-actions flex justify-between gap-2">
+          <button class="secondary-button h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-pray-ink shadow-sm transition hover:bg-pray-mist" type="button" data-action="close-day">닫기</button>
+          <button class="primary-button h-10 rounded-lg bg-pray-green px-5 text-sm font-bold text-white shadow-lift transition hover:bg-pray-deep" id="addDayEvent" type="button" data-action="add-day-event">이 날짜에 등록</button>
         </div>
       </form>
     </dialog>

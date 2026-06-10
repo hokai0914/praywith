@@ -9,6 +9,10 @@ const REGISTRATION_END_TIME = "22:00";
 const DEFAULT_END_HOUR = REGISTRATION_END_HOUR;
 const REPEAT_START_DATE = "2020-06-11";
 const REPEAT_END_DATE = "2026-08-06";
+const VIEW_MODES = {
+  WEEK: "week",
+  MONTH: "month",
+};
 const REPEAT_WEEKDAYS = [
   { value: 0, label: "일", disabled: true },
   { value: 1, label: "월" },
@@ -20,16 +24,21 @@ const REPEAT_WEEKDAYS = [
 ];
 
 const state = {
+  viewMode: VIEW_MODES.WEEK,
   currentWeekStart: startOfWeek(new Date()),
+  currentMonthStart: startOfMonth(new Date()),
   events: [],
   loading: false,
+  loadRequestId: 0,
   selectedEvent: null,
+  selectedDate: null,
   pendingDelete: null,
 };
 
 const els = {
   calendarGrid: document.querySelector("#calendarGrid"),
-  weekRange: document.querySelector("#weekRange"),
+  periodRange: document.querySelector("#periodRange"),
+  periodEyebrow: document.querySelector("#periodEyebrow"),
   connectionStatus: document.querySelector("#connectionStatus"),
   toastRegion: document.querySelector("#toastRegion"),
   eventDialog: document.querySelector("#eventDialog"),
@@ -50,6 +59,11 @@ const els = {
   detailTitle: document.querySelector("#detailTitle"),
   detailMeta: document.querySelector("#detailMeta"),
   detailCompleted: document.querySelector("#detailCompleted"),
+  dayDialog: document.querySelector("#dayDialog"),
+  dayTitle: document.querySelector("#dayTitle"),
+  dayMeta: document.querySelector("#dayMeta"),
+  dayEventList: document.querySelector("#dayEventList"),
+  addDayEvent: document.querySelector("#addDayEvent"),
   confirmDialog: document.querySelector("#confirmDialog"),
   confirmCopy: document.querySelector("#confirmCopy"),
 };
@@ -61,7 +75,7 @@ function init() {
   syncEventFormMode();
   bindActions();
   render();
-  loadWeek();
+  loadEvents();
 }
 
 function bindActions() {
@@ -70,12 +84,15 @@ function bindActions() {
     if (!actionButton) return;
 
     const { action } = actionButton.dataset;
-    if (action === "prev-week") shiftWeek(-7);
-    if (action === "next-week") shiftWeek(7);
+    if (action === "prev-period") shiftPeriod(-1);
+    if (action === "next-period") shiftPeriod(1);
+    if (action === "set-view") switchView(actionButton.dataset.view);
     if (action === "today") goToToday();
     if (action === "add-event") openEventDialog(formatDate(new Date()), registrationHourLabel(new Date().getHours()));
+    if (action === "add-day-event") openSelectedDateEventDialog();
     if (action === "close-event") closeDialog(els.eventDialog);
     if (action === "close-detail") closeDialog(els.detailDialog);
+    if (action === "close-day") closeDayDialog();
     if (action === "delete-current") requestDelete(state.selectedEvent);
     if (action === "cancel-delete") closeDialog(els.confirmDialog);
     if (action === "confirm-delete") confirmDelete();
@@ -173,22 +190,43 @@ function isFormModeDisabled(control) {
   return false;
 }
 
-function shiftWeek(days) {
-  state.currentWeekStart = addDays(state.currentWeekStart, days);
+function shiftPeriod(direction) {
+  if (state.viewMode === VIEW_MODES.MONTH) {
+    state.currentMonthStart = addMonths(state.currentMonthStart, direction);
+  } else {
+    state.currentWeekStart = addDays(state.currentWeekStart, direction * 7);
+  }
   render();
-  loadWeek();
+  loadEvents();
+}
+
+function switchView(viewMode) {
+  if (!Object.values(VIEW_MODES).includes(viewMode) || viewMode === state.viewMode) return;
+
+  const anchorDate = getSelectedAnchorDate() || getViewAnchorDate();
+  state.viewMode = viewMode;
+  if (viewMode === VIEW_MODES.MONTH) {
+    state.currentMonthStart = startOfMonth(anchorDate);
+  } else {
+    state.currentWeekStart = startOfWeek(anchorDate);
+  }
+  render();
+  loadEvents();
 }
 
 function goToToday() {
-  state.currentWeekStart = startOfWeek(new Date());
+  const today = new Date();
+  state.currentWeekStart = startOfWeek(today);
+  state.currentMonthStart = startOfMonth(today);
+  state.selectedDate = formatDate(today);
   render();
-  loadWeek();
+  loadEvents();
 }
 
-async function loadWeek() {
-  const days = getWeekDays();
-  const from = formatDate(days[0]);
-  const to = formatDate(days[6]);
+async function loadEvents() {
+  const requestId = state.loadRequestId + 1;
+  state.loadRequestId = requestId;
+  const { from, to } = getVisibleDateRange();
 
   if (!getApiUrl()) {
     state.events = [];
@@ -201,28 +239,60 @@ async function loadWeek() {
   updateConnectionStatus("불러오는 중");
   try {
     const response = await apiList(from, to);
+    if (requestId !== state.loadRequestId) return;
     state.events = normalizeEvents(response.events || []);
     updateConnectionStatus("Google Sheets 연결됨");
     render();
   } catch (error) {
+    if (requestId !== state.loadRequestId) return;
     showToast(error.message || "일정을 불러오지 못했습니다.", "error");
     updateConnectionStatus("연결 실패");
     state.events = [];
     render();
   } finally {
-    setLoading(false);
+    if (requestId === state.loadRequestId) setLoading(false);
   }
 }
 
 function render() {
+  updateViewButtons();
+  if (state.viewMode === VIEW_MODES.MONTH) {
+    renderMonth();
+  } else {
+    renderWeek();
+  }
+  if (els.dayDialog.open && state.selectedDate) renderDayDialog(state.selectedDate);
+}
+
+function renderWeek() {
   const days = getWeekDays();
   const fromLabel = formatKoreanDate(days[0]);
   const toLabel = formatKoreanDate(days[6]);
-  els.weekRange.textContent = `${fromLabel} - ${toLabel}`;
-  renderCalendar(days);
+  els.periodEyebrow.textContent = "Weekly timetable";
+  els.periodRange.textContent = `${fromLabel} - ${toLabel}`;
+  els.calendarGrid.className = "calendar-grid calendar-grid--week";
+  els.calendarGrid.setAttribute("aria-label", "주간 시간표");
+  renderWeekCalendar(days);
 }
 
-function renderCalendar(days) {
+function renderMonth() {
+  const days = getMonthDays();
+  els.periodEyebrow.textContent = "Monthly calendar";
+  els.periodRange.textContent = formatKoreanMonth(state.currentMonthStart);
+  els.calendarGrid.className = "calendar-grid calendar-grid--month";
+  els.calendarGrid.setAttribute("aria-label", "월간 달력");
+  renderMonthCalendar(days);
+}
+
+function updateViewButtons() {
+  document.querySelectorAll("[data-view]").forEach((button) => {
+    const isActive = button.dataset.view === state.viewMode;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+}
+
+function renderWeekCalendar(days) {
   els.calendarGrid.innerHTML = "";
   const hours = getVisibleHours();
   const todayKey = formatDate(new Date());
@@ -253,6 +323,60 @@ function renderCalendar(days) {
   });
 }
 
+function renderMonthCalendar(days) {
+  els.calendarGrid.innerHTML = "";
+  const todayKey = formatDate(new Date());
+  const currentMonth = state.currentMonthStart.getMonth();
+
+  DAY_LABELS.forEach((label, index) => {
+    const head = createElement("div", `month-weekday-head${index === 0 ? " is-sunday" : ""}`, label);
+    head.setAttribute("role", "columnheader");
+    els.calendarGrid.append(head);
+  });
+
+  days.forEach((day) => {
+    const date = formatDate(day);
+    const cell = createMonthDayCell(day, {
+      date,
+      isCurrentMonth: day.getMonth() === currentMonth,
+      isToday: date === todayKey,
+      isSelected: date === state.selectedDate,
+    });
+    els.calendarGrid.append(cell);
+  });
+}
+
+function createMonthDayCell(day, options) {
+  const { date, isCurrentMonth, isToday, isSelected } = options;
+  const canRegister = isRegistrationDate(date);
+  const className = [
+    "month-day-cell",
+    isCurrentMonth ? "" : "is-outside",
+    isToday ? "is-today" : "",
+    isSelected ? "is-selected" : "",
+    canRegister ? "" : "is-disabled",
+  ].filter(Boolean).join(" ");
+  const cell = createElement("div", className);
+  cell.setAttribute("role", "gridcell");
+
+  const dayButton = createElement("button", "month-day-button");
+  dayButton.type = "button";
+  dayButton.setAttribute("aria-label", `${date} 일정 목록 보기`);
+  dayButton.addEventListener("click", () => openDayDialog(date));
+  cell.append(dayButton);
+
+  const dateText = day.getDate() === 1 || !isCurrentMonth ? `${day.getMonth() + 1}/${day.getDate()}` : String(day.getDate());
+  const number = createElement("div", "month-day-number");
+  number.append(createElement("span", "", dateText));
+  cell.append(number);
+
+  const stack = createElement("div", "month-events");
+  eventsForDate(date).forEach((event) => stack.append(createEventCard(event, { showTime: true, variant: "month" })));
+  cell.append(stack);
+
+  return cell;
+}
+
 function createSlot(date, time) {
   const canRegister = isRegistrationSlot(date, time);
   const slot = createElement("div", `slot${canRegister ? "" : " is-disabled"}`);
@@ -278,15 +402,21 @@ function createSlot(date, time) {
   return slot;
 }
 
-function createEventCard(event) {
-  const card = createElement("article", `event-card${event.completed ? " completed" : ""}`);
+function createEventCard(event, options = {}) {
+  const showTime = options.showTime === true;
+  const variantClass = options.variant ? ` event-card--${options.variant}` : "";
+  const card = createElement("article", `event-card${event.completed ? " completed" : ""}${variantClass}`);
   card.tabIndex = 0;
   card.setAttribute("aria-label", `${event.time} ${event.personName}`);
-  card.addEventListener("click", () => openDetailDialog(event));
+  const openDetail = () => {
+    if (options.closeDayBeforeDetail) closeDialog(els.dayDialog);
+    openDetailDialog(event);
+  };
+  card.addEventListener("click", openDetail);
   card.addEventListener("keydown", (keyboardEvent) => {
     if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") {
       keyboardEvent.preventDefault();
-      openDetailDialog(event);
+      openDetail();
     }
   });
 
@@ -298,7 +428,8 @@ function createEventCard(event) {
   checkbox.addEventListener("click", (clickEvent) => clickEvent.stopPropagation());
   checkbox.addEventListener("change", async () => toggleEvent(event.id, checkbox.checked));
 
-  const nameButton = createElement("button", "event-name", event.personName);
+  const nameText = showTime ? `${event.time} ${event.personName}` : event.personName;
+  const nameButton = createElement("button", "event-name", nameText);
   nameButton.type = "button";
   nameButton.title = `${event.time} ${event.personName}`;
 
@@ -324,8 +455,18 @@ function eventsForSlot(date, time) {
     });
 }
 
+function eventsForDate(date) {
+  return state.events
+    .filter((event) => event.date === date)
+    .sort((a, b) => {
+      if (a.time !== b.time) return a.time.localeCompare(b.time);
+      if (a.completed !== b.completed) return Number(a.completed) - Number(b.completed);
+      return a.personName.localeCompare(b.personName, "ko-KR");
+    });
+}
+
 function getVisibleHours() {
-  const eventHours = state.events
+  const eventHours = getVisibleEvents()
     .map((event) => Number.parseInt(event.time.slice(0, 2), 10))
     .filter((hour) => Number.isInteger(hour));
   const first = Math.min(DEFAULT_START_HOUR, ...eventHours);
@@ -351,6 +492,103 @@ function openEventDialog(date, time) {
   syncEventFormMode();
   showDialog(els.eventDialog);
   window.setTimeout(() => els.personName.focus(), 0);
+}
+
+function openDayDialog(date) {
+  if (!isDateKey(date)) return;
+  state.selectedDate = date;
+  renderDayDialog(date);
+  showDialog(els.dayDialog);
+}
+
+function renderDayDialog(date) {
+  const dayEvents = eventsForDate(date);
+  const canRegister = isRegistrationDate(date);
+  const parsedDate = parseDate(date);
+
+  els.dayTitle.textContent = formatKoreanDateWithWeekday(parsedDate);
+  els.dayMeta.textContent = dayEvents.length ? `${dayEvents.length}개 일정이 등록되어 있습니다.` : "등록된 일정이 없습니다.";
+  renderDaySchedule(date, parsedDate);
+
+  if (canRegister) {
+    delete els.addDayEvent.dataset.alwaysDisabled;
+    els.addDayEvent.disabled = state.loading;
+    els.addDayEvent.textContent = "이 날짜에 등록";
+  } else {
+    els.addDayEvent.dataset.alwaysDisabled = "true";
+    els.addDayEvent.disabled = true;
+    els.addDayEvent.textContent = "일요일은 등록 불가";
+  }
+}
+
+function closeDayDialog() {
+  closeDialog(els.dayDialog);
+}
+
+function openSelectedDateEventDialog() {
+  if (!state.selectedDate) return;
+  const date = state.selectedDate;
+  closeDialog(els.dayDialog);
+  openEventDialog(date, hourLabel(DEFAULT_START_HOUR));
+}
+
+function renderDaySchedule(date, parsedDate) {
+  els.dayEventList.innerHTML = "";
+
+  const corner = createElement("div", "corner");
+  const head = createElement("div", "day-head");
+  head.setAttribute("role", "columnheader");
+  head.innerHTML = `
+    <span class="day-name">${DAY_LABELS[parsedDate.getDay()]}</span>
+    <span class="day-date">${parsedDate.getMonth() + 1}/${parsedDate.getDate()}</span>
+  `;
+  els.dayEventList.append(corner, head);
+
+  getDayVisibleHours(date).forEach((hour) => {
+    const time = hourLabel(hour);
+    const timeCell = createElement("div", "time-cell", time);
+    timeCell.setAttribute("role", "rowheader");
+    els.dayEventList.append(timeCell, createDaySlot(date, time));
+  });
+}
+
+function createDaySlot(date, time) {
+  const canRegister = isRegistrationSlot(date, time);
+  const slot = createElement("div", `slot day-slot${canRegister ? "" : " is-disabled"}`);
+  slot.setAttribute("role", "gridcell");
+
+  const slotButton = createElement("button", "slot-button");
+  slotButton.type = "button";
+  slotButton.setAttribute("aria-label", `${date} ${time} 릴레이 기도 등록`);
+  if (canRegister) {
+    slotButton.addEventListener("click", () => {
+      closeDialog(els.dayDialog);
+      openEventDialog(date, time);
+    });
+  } else {
+    slotButton.disabled = true;
+    slotButton.dataset.alwaysDisabled = "true";
+    slotButton.setAttribute("aria-disabled", "true");
+  }
+  slot.append(slotButton);
+
+  const events = eventsForSlot(date, time);
+  const stack = createElement("div", "events");
+  events.forEach((event) => {
+    stack.append(createEventCard(event, { closeDayBeforeDetail: true }));
+  });
+  slot.append(stack);
+
+  return slot;
+}
+
+function getDayVisibleHours(date) {
+  const eventHours = eventsForDate(date)
+    .map((event) => Number.parseInt(event.time.slice(0, 2), 10))
+    .filter((hour) => Number.isInteger(hour));
+  const first = Math.min(DEFAULT_START_HOUR, ...eventHours);
+  const last = Math.max(DEFAULT_END_HOUR, ...eventHours);
+  return Array.from({ length: last - first + 1 }, (_, index) => first + index);
 }
 
 function selectRepeatDefaults(date, time) {
@@ -587,8 +825,42 @@ function closeDialog(dialog) {
   if (dialog.open) dialog.close();
 }
 
+function getSelectedAnchorDate() {
+  return isDateKey(state.selectedDate) ? parseDate(state.selectedDate) : null;
+}
+
+function getViewAnchorDate() {
+  return state.viewMode === VIEW_MODES.MONTH ? state.currentMonthStart : state.currentWeekStart;
+}
+
+function getVisibleDateRange() {
+  if (state.viewMode === VIEW_MODES.MONTH) {
+    const days = getMonthDays();
+    return {
+      from: formatDate(days[0]),
+      to: formatDate(days[days.length - 1]),
+    };
+  }
+
+  const days = getWeekDays();
+  return {
+    from: formatDate(days[0]),
+    to: formatDate(days[6]),
+  };
+}
+
+function getVisibleEvents() {
+  const { from, to } = getVisibleDateRange();
+  return state.events.filter((event) => event.date >= from && event.date <= to);
+}
+
 function getWeekDays() {
   return Array.from({ length: 7 }, (_, index) => addDays(state.currentWeekStart, index));
+}
+
+function getMonthDays() {
+  const firstVisibleDay = startOfWeek(state.currentMonthStart);
+  return Array.from({ length: 42 }, (_, index) => addDays(firstVisibleDay, index));
 }
 
 function buildRepeatEvents(personName, weekdays, times, startDate = REPEAT_START_DATE, endDate = REPEAT_END_DATE) {
@@ -636,6 +908,10 @@ function formatDateLabel(dateKey) {
   return dateKey.replaceAll("-", ".");
 }
 
+function startOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
 function startOfWeek(date) {
   const local = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   local.setDate(local.getDate() - local.getDay());
@@ -646,6 +922,10 @@ function addDays(date, days) {
   const next = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   next.setDate(next.getDate() + days);
   return next;
+}
+
+function addMonths(date, months) {
+  return new Date(date.getFullYear(), date.getMonth() + months, 1);
 }
 
 function parseDate(dateKey) {
@@ -662,6 +942,14 @@ function formatDate(date) {
 
 function formatKoreanDate(date) {
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function formatKoreanDateWithWeekday(date) {
+  return `${formatKoreanDate(date)} (${DAY_LABELS[date.getDay()]})`;
+}
+
+function formatKoreanMonth(date) {
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function hourLabel(hour) {

@@ -23,6 +23,7 @@
   --slot-height: 70px;
   --time-width: 76px;
   --day-width: 150px;
+  --month-day-width: 132px;
   font-family:
     "Pretendard Variable",
     "Pretendard",
@@ -176,7 +177,7 @@ input:focus-visible {
 
 .week-toolbar {
   display: grid;
-  grid-template-columns: auto minmax(180px, 1fr) auto;
+  grid-template-columns: auto minmax(180px, 1fr) auto auto;
   align-items: center;
   gap: 16px;
   padding: 16px;
@@ -267,6 +268,50 @@ input:focus-visible {
   font-weight: 760;
 }
 
+.view-switch {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(58px, 1fr));
+  align-items: center;
+  gap: 3px;
+  min-height: 40px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 253, 248, 0.94);
+}
+
+.view-button {
+  min-height: 32px;
+  border-radius: 7px;
+  padding: 0 12px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 760;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.view-button:hover {
+  color: var(--ink);
+  background: var(--surface-soft);
+}
+
+.view-button.is-active {
+  color: white;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.13), transparent),
+    var(--accent);
+  box-shadow: 0 7px 14px rgba(47, 125, 88, 0.16);
+}
+
+.view-button:active {
+  transform: translateY(1px);
+}
+
 .icon-button:hover,
 .today-button:hover,
 .secondary-button:hover {
@@ -304,6 +349,9 @@ input:focus-visible {
 
 .calendar-grid {
   display: grid;
+}
+
+.calendar-grid--week {
   min-width: calc(var(--time-width) + var(--day-width) * 7);
   grid-template-columns: var(--time-width) repeat(7, minmax(var(--day-width), 1fr));
 }
@@ -427,6 +475,126 @@ input:focus-visible {
   background: transparent;
 }
 
+.calendar-grid--month {
+  min-width: calc(var(--month-day-width) * 7);
+  grid-template-columns: repeat(7, minmax(var(--month-day-width), 1fr));
+}
+
+.month-weekday-head,
+.month-day-cell {
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.month-weekday-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 12px;
+  color: var(--muted);
+  background:
+    linear-gradient(180deg, #fffdf8, #f8fbf5);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.month-weekday-head.is-sunday {
+  color: var(--danger);
+}
+
+.month-day-cell {
+  position: relative;
+  min-height: 136px;
+  padding: 8px;
+  background: rgba(255, 253, 248, 0.9);
+}
+
+.month-day-cell:hover {
+  background: #f7fbf3;
+}
+
+.month-day-cell.is-outside {
+  color: var(--muted);
+  background: #f5f7f1;
+}
+
+.month-day-cell.is-today {
+  background:
+    linear-gradient(180deg, rgba(220, 238, 227, 0.46), rgba(255, 253, 248, 0.92));
+  box-shadow: inset 0 0 0 2px rgba(47, 125, 88, 0.34);
+}
+
+.month-day-cell.is-selected {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.month-day-cell.is-disabled {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(223, 227, 216, 0.24),
+      rgba(223, 227, 216, 0.24) 8px,
+      rgba(255, 253, 248, 0.5) 8px,
+      rgba(255, 253, 248, 0.5) 16px
+    );
+}
+
+.month-day-button {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+}
+
+.month-day-button:disabled {
+  cursor: not-allowed;
+}
+
+.month-day-cell:focus-within {
+  outline: 2px solid rgba(47, 125, 88, 0.34);
+  outline-offset: -2px;
+}
+
+.month-day-number,
+.month-events {
+  position: relative;
+  z-index: 1;
+}
+
+.month-day-number {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+  margin-bottom: 6px;
+  pointer-events: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.month-day-cell.is-today .month-day-number span {
+  display: inline-grid;
+  min-width: 24px;
+  min-height: 24px;
+  place-items: center;
+  border-radius: 999px;
+  color: white;
+  background: var(--accent);
+}
+
+.month-events {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  pointer-events: none;
+}
+
 .events {
   position: relative;
   z-index: 1;
@@ -468,6 +636,29 @@ input:focus-visible {
   color: var(--muted);
   background: #f3f4ef;
   box-shadow: none;
+}
+
+.event-card--month {
+  grid-template-columns: 18px minmax(0, 1fr) 24px;
+  min-height: 30px;
+  gap: 4px;
+  padding: 5px;
+  border-radius: 7px;
+}
+
+.event-card--month .event-check {
+  width: 16px;
+  height: 16px;
+}
+
+.event-card--month .event-name {
+  font-size: 12px;
+}
+
+.event-card--month .delete-mini {
+  width: 22px;
+  height: 22px;
+  font-size: 16px;
 }
 
 .event-check {
@@ -523,6 +714,10 @@ input:focus-visible {
   width: min(560px, calc(100vw - 24px));
 }
 
+.day-modal {
+  width: min(680px, calc(100vw - 24px));
+}
+
 .modal::backdrop {
   background: rgba(22, 29, 23, 0.38);
   backdrop-filter: blur(3px);
@@ -558,6 +753,35 @@ input:focus-visible {
   font-weight: 760;
   line-height: 1.2;
   letter-spacing: 0;
+}
+
+.day-meta {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.day-schedule-wrap {
+  max-height: min(58vh, 520px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-elevated);
+  scrollbar-color: var(--line-strong) var(--surface-soft);
+  scrollbar-width: thin;
+}
+
+.day-schedule-grid {
+  display: grid;
+  min-width: calc(var(--time-width) + 320px);
+  grid-template-columns: var(--time-width) minmax(320px, 1fr);
+}
+
+.day-schedule-grid .day-head {
+  min-height: 58px;
+}
+
+.day-slot {
+  min-height: var(--slot-height);
 }
 
 .field {
@@ -835,9 +1059,16 @@ input:focus-visible {
     grid-row: 2;
   }
 
-  .week-toolbar > .primary-button {
+  .view-switch {
     grid-column: 1;
     grid-row: 3;
+    justify-self: start;
+    width: min(100%, 180px);
+  }
+
+  .week-toolbar > .primary-button {
+    grid-column: 1;
+    grid-row: 4;
     justify-self: start;
     width: min(100%, 320px);
     max-width: calc(100vw - 60px);
@@ -852,6 +1083,7 @@ input:focus-visible {
   :root {
     --time-width: 64px;
     --day-width: 132px;
+    --month-day-width: 118px;
   }
 
   .brand h1 {
