@@ -2,7 +2,7 @@ const SHEET_NAME = 'Schedules';
 const SPREADSHEET_ID_PROPERTY = 'SCHEDULE_SPREADSHEET_ID';
 const HEADERS = ['id', 'date', 'time', 'personName', 'completed', 'createdAt', 'updatedAt'];
 const REGISTRATION_END_HOUR = 22;
-const REPEAT_START_DATE = '2020-06-11';
+const REPEAT_START_DATE = '2026-06-11';
 const REPEAT_END_DATE = '2026-08-06';
 const MAX_BULK_CREATE_COUNT = 1200;
 
