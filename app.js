@@ -13,6 +13,7 @@ const VIEW_MODES = {
   WEEK: "week",
   MONTH: "month",
 };
+const EVENT_CACHE_TTL_MS = 15 * 1000;
 const REPEAT_WEEKDAYS = [
   { value: 0, label: "일", disabled: true },
   { value: 1, label: "월" },
@@ -30,6 +31,7 @@ const state = {
   events: [],
   loading: false,
   loadRequestId: 0,
+  eventCache: new Map(),
   selectedEvent: null,
   selectedDate: null,
   pendingDelete: null,
@@ -228,10 +230,21 @@ async function loadEvents() {
   const requestId = state.loadRequestId + 1;
   state.loadRequestId = requestId;
   const { from, to } = getVisibleDateRange();
+  const cacheKey = getEventCacheKey(from, to);
 
   if (!getApiUrl()) {
     state.events = [];
+    setLoading(false);
     updateConnectionStatus("공유 연결이 설정되지 않음");
+    render();
+    return;
+  }
+
+  const cachedEvents = getCachedEvents(cacheKey);
+  if (cachedEvents) {
+    state.events = cachedEvents;
+    setLoading(false);
+    updateConnectionStatus("Google Sheets 연결됨");
     render();
     return;
   }
@@ -241,7 +254,9 @@ async function loadEvents() {
   try {
     const response = await apiList(from, to);
     if (requestId !== state.loadRequestId) return;
-    state.events = normalizeEvents(response.events || []);
+    const events = normalizeEvents(response.events || []);
+    cacheEvents(cacheKey, events);
+    state.events = events;
     updateConnectionStatus("Google Sheets 연결됨");
     render();
   } catch (error) {
@@ -404,9 +419,11 @@ function createMonthDayCell(day, options) {
   number.append(createElement("span", "", dateText));
   cell.append(number);
 
-  const stack = createElement("div", "month-events");
-  eventsForDate(date).forEach((event) => stack.append(createEventCard(event, { showTime: true, variant: "month" })));
-  cell.append(stack);
+  const dayEvents = eventsForDate(date);
+  if (dayEvents.length) {
+    const summary = createElement("p", "month-prayer-summary", formatPrayerHoursSummary(dayEvents));
+    cell.append(summary);
+  }
 
   return cell;
 }
@@ -497,6 +514,10 @@ function eventsForDate(date) {
       if (a.completed !== b.completed) return Number(a.completed) - Number(b.completed);
       return a.personName.localeCompare(b.personName, "ko-KR");
     });
+}
+
+function formatPrayerHoursSummary(events) {
+  return `모두 ${events.length} 시간의 기도시간이 분양되었어요`;
 }
 
 function getVisibleHours() {
@@ -666,6 +687,7 @@ async function submitEventForm(event) {
     setLoading(true);
     const response = await apiPost({ action: "create", event: payload });
     const createdEvent = normalizeEvents([response.event])[0];
+    clearEventCache();
     state.events = [...state.events, createdEvent].filter(Boolean);
     closeDialog(els.eventDialog);
     showToast("일정을 등록했습니다.");
@@ -704,6 +726,7 @@ async function submitRepeatEventForm(personName) {
     setLoading(true);
     const response = await apiPost({ action: "bulkCreate", events });
     const createdEvents = normalizeEvents(response.events || []);
+    clearEventCache();
     state.events = normalizeEvents([...state.events, ...createdEvents]);
     closeDialog(els.eventDialog);
     showToast(`${createdEvents.length}개 일정을 등록했습니다.`);
@@ -734,6 +757,7 @@ async function toggleEvent(id, completed) {
   try {
     setLoading(true);
     await apiPost({ action: "toggle", id, completed });
+    clearEventCache();
     showToast(completed ? "완료로 표시했습니다." : "완료 표시를 해제했습니다.");
   } catch (error) {
     state.events = previousEvents;
@@ -762,6 +786,7 @@ async function confirmDelete() {
   try {
     setLoading(true);
     await apiPost({ action: "delete", id: event.id });
+    clearEventCache();
     state.events = state.events.filter((item) => item.id !== event.id);
     state.pendingDelete = null;
     if (state.selectedEvent?.id === event.id) {
@@ -838,6 +863,37 @@ function normalizeEvents(events) {
       if (a.time !== b.time) return a.time.localeCompare(b.time);
       return a.personName.localeCompare(b.personName, "ko-KR");
     });
+}
+
+function getEventCacheKey(from, to) {
+  return `${from}:${to}`;
+}
+
+function getCachedEvents(cacheKey) {
+  const cached = state.eventCache.get(cacheKey);
+  if (!cached) return null;
+
+  if (Date.now() - cached.cachedAt > EVENT_CACHE_TTL_MS) {
+    state.eventCache.delete(cacheKey);
+    return null;
+  }
+
+  return cloneEvents(cached.events);
+}
+
+function cacheEvents(cacheKey, events) {
+  state.eventCache.set(cacheKey, {
+    cachedAt: Date.now(),
+    events: cloneEvents(events),
+  });
+}
+
+function clearEventCache() {
+  state.eventCache.clear();
+}
+
+function cloneEvents(events) {
+  return events.map((event) => ({ ...event }));
 }
 
 function updateConnectionStatus(message) {

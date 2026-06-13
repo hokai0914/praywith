@@ -1,10 +1,13 @@
 const SHEET_NAME = 'Schedules';
 const SPREADSHEET_ID_PROPERTY = 'SCHEDULE_SPREADSHEET_ID';
+const DATA_VERSION_PROPERTY = 'SCHEDULE_DATA_VERSION';
 const HEADERS = ['id', 'date', 'time', 'personName', 'completed', 'createdAt', 'updatedAt'];
 const REGISTRATION_END_HOUR = 22;
 const REPEAT_START_DATE = '2026-06-11';
 const REPEAT_END_DATE = '2026-08-06';
 const MAX_BULK_CREATE_COUNT = 1200;
+const LIST_CACHE_TTL_SECONDS = 15;
+const LIST_CACHE_PREFIX = 'events:list:';
 
 function doGet(e) {
   try {
@@ -15,7 +18,7 @@ function doGet(e) {
 
     const from = normalizeDate_(e.parameter.from);
     const to = normalizeDate_(e.parameter.to);
-    return json_({ ok: true, events: listEvents_(from, to) });
+    return json_({ ok: true, events: listEventsCached_(from, to) });
   } catch (error) {
     return json_({ ok: false, error: error.message || String(error) });
   }
@@ -28,20 +31,26 @@ function doPost(e) {
     const body = parseBody_(e);
 
     if (body.action === 'create') {
-      return json_({ ok: true, event: createEvent_(body.event || {}) });
+      const event = createEvent_(body.event || {});
+      bumpDataVersion_();
+      return json_({ ok: true, event });
     }
 
     if (body.action === 'bulkCreate') {
-      return json_({ ok: true, events: createEvents_(body.events || []) });
+      const events = createEvents_(body.events || []);
+      bumpDataVersion_();
+      return json_({ ok: true, events });
     }
 
     if (body.action === 'toggle') {
       toggleEvent_(body.id, body.completed);
+      bumpDataVersion_();
       return json_({ ok: true });
     }
 
     if (body.action === 'delete') {
       deleteEvent_(body.id);
+      bumpDataVersion_();
       return json_({ ok: true });
     }
 
@@ -59,6 +68,27 @@ function doPost(e) {
 
 function initializeSchedulesSheet() {
   ensureSheet_();
+}
+
+function listEventsCached_(from, to) {
+  const cache = CacheService.getScriptCache();
+  const cacheKey = `${LIST_CACHE_PREFIX}${getDataVersion_()}:${from}:${to}`;
+  const cached = cache.get(cacheKey);
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch (error) {
+      // Ignore malformed cache entries and rebuild from the sheet.
+    }
+  }
+
+  const events = listEvents_(from, to);
+  try {
+    cache.put(cacheKey, JSON.stringify(events), LIST_CACHE_TTL_SECONDS);
+  } catch (error) {
+    // Cache writes can fail for large responses; sheet data remains authoritative.
+  }
+  return events;
 }
 
 function listEvents_(from, to) {
@@ -152,10 +182,11 @@ function findRowNumberById_(id) {
 
 function readRows_() {
   const sheet = ensureSheet_();
-  const values = sheet.getDataRange().getValues();
-  if (values.length <= 1) return [];
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return [];
 
-  return values.slice(1).map((row, index) => ({
+  const values = sheet.getRange(2, 1, lastRow - 1, HEADERS.length).getValues();
+  return values.map((row, index) => ({
     rowNumber: index + 2,
     id: String(row[0] || '').trim(),
     date: formatDateValue_(row[1]),
@@ -193,6 +224,18 @@ function getSpreadsheet_() {
     throw new Error('Set SCHEDULE_SPREADSHEET_ID in Script Properties.');
   }
   return spreadsheet;
+}
+
+function getDataVersion_() {
+  return PropertiesService.getScriptProperties().getProperty(DATA_VERSION_PROPERTY) || '0';
+}
+
+function bumpDataVersion_() {
+  try {
+    PropertiesService.getScriptProperties().setProperty(DATA_VERSION_PROPERTY, String(Date.now()));
+  } catch (error) {
+    // A failed version bump should not fail a completed write; cached reads expire quickly.
+  }
 }
 
 function parseBody_(e) {

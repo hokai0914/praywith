@@ -561,7 +561,8 @@ input:focus-visible {
 }
 
 .month-day-number,
-.month-events {
+.month-events,
+.month-prayer-summary {
   position: relative;
   z-index: 1;
 }
@@ -593,6 +594,22 @@ input:focus-visible {
   flex-direction: column;
   gap: 5px;
   pointer-events: none;
+}
+
+.month-prayer-summary {
+  margin: 0;
+  padding: 8px 9px;
+  border: 1px solid rgba(47, 125, 88, 0.18);
+  border-radius: 8px;
+  color: var(--accent-strong);
+  background: rgba(220, 238, 227, 0.62);
+  box-shadow: 0 5px 14px rgba(47, 125, 88, 0.08);
+  pointer-events: none;
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.35;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .events {
