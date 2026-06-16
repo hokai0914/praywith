@@ -1,5 +1,28 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  getFirestore,
+  orderBy,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+  writeBatch,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 const CLIENT_CONFIG = {
-  apiUrl: "https://script.google.com/macros/s/AKfycbxz5I3jXE3T6lto2drCwshiE_pUbBKUFJyu4ABJh_-ve5fS3qG1huLyUrgTIA5M1ZpZ9w/exec",
+  firebase: {
+    apiKey: "AIzaSyAdbxYnK4sVf91yyhhZHAbHg-zuV1A9cbk",
+    authDomain: "praywith-ba55f.firebaseapp.com",
+    projectId: "praywith-ba55f",
+    storageBucket: "praywith-ba55f.firebasestorage.app",
+    messagingSenderId: "329392260667",
+    appId: "1:329392260667:web:4c0eacbd7e6215b73d7e1e"
+  },
+  collectionName: "schedules",
 };
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -14,6 +37,8 @@ const VIEW_MODES = {
   MONTH: "month",
 };
 const EVENT_CACHE_TTL_MS = 15 * 1000;
+const MAX_BULK_CREATE_COUNT = 1200;
+const FIRESTORE_BATCH_LIMIT = 450;
 const REPEAT_WEEKDAYS = [
   { value: 0, label: "일", disabled: true },
   { value: 1, label: "월" },
@@ -23,6 +48,9 @@ const REPEAT_WEEKDAYS = [
   { value: 5, label: "금" },
   { value: 6, label: "토" },
 ];
+
+let firebaseApp;
+let firestoreDb;
 
 const state = {
   viewMode: VIEW_MODES.WEEK,
@@ -174,8 +202,30 @@ function updateRepeatSummary() {
   els.repeatSummary.textContent = `${formatDateLabel(range.start)} - ${formatDateLabel(range.end)} 사이에 ${count}개 일정이 등록됩니다.`;
 }
 
-function getApiUrl() {
-  return CLIENT_CONFIG.apiUrl.trim();
+function isFirebaseConfigured() {
+  const config = CLIENT_CONFIG.firebase || {};
+  return ["apiKey", "projectId", "appId"].every((key) => String(config[key] || "").trim());
+}
+
+function getFirestoreDb() {
+  if (!isFirebaseConfigured()) {
+    throw new Error("Firebase 설정이 필요합니다.");
+  }
+
+  if (!firebaseApp) {
+    firebaseApp = initializeApp(CLIENT_CONFIG.firebase);
+    firestoreDb = getFirestore(firebaseApp);
+  }
+
+  return firestoreDb;
+}
+
+function getSchedulesCollection() {
+  return collection(getFirestoreDb(), CLIENT_CONFIG.collectionName);
+}
+
+function getScheduleDocument(id) {
+  return doc(getFirestoreDb(), CLIENT_CONFIG.collectionName, id);
 }
 
 function setLoading(isLoading) {
@@ -232,10 +282,10 @@ async function loadEvents() {
   const { from, to } = getVisibleDateRange();
   const cacheKey = getEventCacheKey(from, to);
 
-  if (!getApiUrl()) {
+  if (!isFirebaseConfigured()) {
     state.events = [];
     setLoading(false);
-    updateConnectionStatus("공유 연결이 설정되지 않음");
+    updateConnectionStatus("Firebase 설정 필요");
     render();
     return;
   }
@@ -244,7 +294,7 @@ async function loadEvents() {
   if (cachedEvents) {
     state.events = cachedEvents;
     setLoading(false);
-    updateConnectionStatus("Google Sheets 연결됨");
+    updateConnectionStatus("Firebase 연결됨");
     render();
     return;
   }
@@ -257,7 +307,7 @@ async function loadEvents() {
     const events = normalizeEvents(response.events || []);
     cacheEvents(cacheKey, events);
     state.events = events;
-    updateConnectionStatus("Google Sheets 연결됨");
+    updateConnectionStatus("Firebase 연결됨");
     render();
   } catch (error) {
     if (requestId !== state.loadRequestId) return;
@@ -530,8 +580,8 @@ function getVisibleHours() {
 }
 
 function openEventDialog(date, time) {
-  if (!getApiUrl()) {
-    showToast("공유 연결이 설정되지 않아 등록할 수 없습니다.", "error");
+  if (!isFirebaseConfigured()) {
+    showToast("Firebase 설정이 없어 등록할 수 없습니다.", "error");
     return;
   }
   if (!isRegistrationDate(date)) {
@@ -804,46 +854,122 @@ async function confirmDelete() {
 }
 
 async function apiList(from, to) {
-  const apiUrl = getApiUrl();
-  if (!apiUrl) throw new Error("공유 연결이 설정되지 않았습니다.");
+  if (!isFirebaseConfigured()) throw new Error("Firebase 설정이 필요합니다.");
 
-  const url = new URL(apiUrl);
-  url.searchParams.set("action", "list");
-  url.searchParams.set("from", from);
-  url.searchParams.set("to", to);
+  const eventsQuery = query(
+    getSchedulesCollection(),
+    where("date", ">=", from),
+    where("date", "<=", to),
+    orderBy("date"),
+  );
+  const snapshot = await getDocs(eventsQuery);
+  const events = snapshot.docs.map((scheduleDoc) => ({
+    ...scheduleDoc.data(),
+    id: scheduleDoc.id,
+  }));
 
-  const response = await fetch(url.toString(), { method: "GET" });
-  return parseApiResponse(response);
+  return { ok: true, events };
 }
 
 async function apiPost(payload) {
-  const apiUrl = getApiUrl();
-  if (!apiUrl) throw new Error("공유 연결이 설정되지 않았습니다.");
+  if (!isFirebaseConfigured()) throw new Error("Firebase 설정이 필요합니다.");
 
-  const response = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8",
-    },
-    body: JSON.stringify(payload),
-  });
-  return parseApiResponse(response);
+  if (payload.action === "create") {
+    const event = await createScheduleEvent(payload.event || {});
+    return { ok: true, event };
+  }
+
+  if (payload.action === "bulkCreate") {
+    const events = await createScheduleEvents(payload.events || []);
+    return { ok: true, events };
+  }
+
+  if (payload.action === "toggle") {
+    await updateDoc(getScheduleDocument(normalizeEventId(payload.id)), {
+      completed: payload.completed === true,
+      updatedAt: new Date().toISOString(),
+    });
+    return { ok: true };
+  }
+
+  if (payload.action === "delete") {
+    await deleteDoc(getScheduleDocument(normalizeEventId(payload.id)));
+    return { ok: true };
+  }
+
+  throw new Error("지원하지 않는 요청입니다.");
 }
 
-async function parseApiResponse(response) {
-  const text = await response.text();
-  let data;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    throw new Error("서버 응답을 해석하지 못했습니다.");
+async function createScheduleEvent(input) {
+  const docRef = doc(getSchedulesCollection());
+  const now = new Date().toISOString();
+  const event = buildScheduleRecord(input, docRef.id, now, false);
+
+  await setDoc(docRef, event);
+  return event;
+}
+
+async function createScheduleEvents(inputs) {
+  if (!Array.isArray(inputs) || !inputs.length) throw new Error("등록할 일정이 없습니다.");
+  if (inputs.length > MAX_BULK_CREATE_COUNT) throw new Error("한 번에 등록할 일정이 너무 많습니다.");
+
+  const now = new Date().toISOString();
+  const createdEvents = inputs.map((input) => {
+    const docRef = doc(getSchedulesCollection());
+    return {
+      ref: docRef,
+      event: buildScheduleRecord(input, docRef.id, now, true),
+    };
+  });
+
+  for (let index = 0; index < createdEvents.length; index += FIRESTORE_BATCH_LIMIT) {
+    const batch = writeBatch(getFirestoreDb());
+    createdEvents.slice(index, index + FIRESTORE_BATCH_LIMIT).forEach(({ ref, event }) => {
+      batch.set(ref, event);
+    });
+    await batch.commit();
   }
 
-  if (!response.ok || data.ok === false) {
-    throw new Error(data.error || "요청을 처리하지 못했습니다.");
-  }
+  return createdEvents.map(({ event }) => event);
+}
 
-  return data;
+function buildScheduleRecord(input, id, now, repeatOnly) {
+  return {
+    id,
+    date: normalizeScheduleDate(input.date, repeatOnly),
+    time: normalizeScheduleTime(input.time),
+    personName: normalizeSchedulePersonName(input.personName),
+    completed: false,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function normalizeEventId(value) {
+  const id = String(value || "").trim();
+  if (!id) throw new Error("일정 ID가 필요합니다.");
+  return id;
+}
+
+function normalizeScheduleDate(value, repeatOnly) {
+  const date = String(value || "").trim();
+  if (!isDateKey(date)) throw new Error("날짜 형식이 올바르지 않습니다.");
+  if (!isRegistrationDate(date)) throw new Error("일요일은 선택할 수 없습니다.");
+  if (repeatOnly && !isRepeatDate(date)) throw new Error("반복 등록 기간을 벗어난 날짜입니다.");
+  return date;
+}
+
+function normalizeScheduleTime(value) {
+  const time = normalizeRegistrationTime(String(value || ""));
+  if (!time) throw new Error("시간은 22:00 이하의 정각이어야 합니다.");
+  return time;
+}
+
+function normalizeSchedulePersonName(value) {
+  const personName = String(value || "").trim();
+  if (!personName) throw new Error("이름을 입력해 주세요.");
+  if (personName.length > 80) throw new Error("이름은 80자 이하로 입력해 주세요.");
+  return personName;
 }
 
 function normalizeEvents(events) {
