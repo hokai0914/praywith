@@ -3,8 +3,10 @@ const SPREADSHEET_ID_PROPERTY = 'SCHEDULE_SPREADSHEET_ID';
 const DATA_VERSION_PROPERTY = 'SCHEDULE_DATA_VERSION';
 const HEADERS = ['id', 'date', 'time', 'personName', 'completed', 'createdAt', 'updatedAt'];
 const REGISTRATION_END_HOUR = 22;
-const REPEAT_START_DATE = '2026-06-11';
-const REPEAT_END_DATE = '2026-08-06';
+const REGISTRATION_START_DATE = '2026-08-26';
+const REGISTRATION_END_DATE = '2026-10-07';
+const REPEAT_START_DATE = REGISTRATION_START_DATE;
+const REPEAT_END_DATE = REGISTRATION_END_DATE;
 const MAX_BULK_CREATE_COUNT = 1200;
 const LIST_CACHE_TTL_SECONDS = 15;
 const LIST_CACHE_PREFIX = 'events:list:';
@@ -267,6 +269,9 @@ function normalizeRepeatDate_(value) {
 
 function normalizeRegistrationDate_(value) {
   const date = normalizeDate_(value);
+  if (date < REGISTRATION_START_DATE || date > REGISTRATION_END_DATE) {
+    throw new Error('Registration date is out of range.');
+  }
   const day = new Date(`${date}T00:00:00`).getDay();
   if (day === 0) throw new Error('Sunday cannot be selected.');
   return date;

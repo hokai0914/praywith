@@ -49,9 +49,9 @@
 
     <header class="app-header mx-auto flex w-full max-w-[1600px] items-center justify-between gap-5 px-4 py-5 sm:px-8 lg:px-10">
       <div class="brand flex min-w-0 items-center gap-3">
-        <span class="brand-mark grid h-12 w-12 place-items-center rounded-lg bg-pray-green text-sm font-extrabold text-white shadow-lift" aria-hidden="true">PW</span>
+        <span class="brand-mark grid h-12 w-12 place-items-center rounded-lg bg-pray-green text-sm font-extrabold text-white shadow-lift" aria-hidden="true">함께 예배하자</span>
         <div>
-          <h1 class="brand-title text-[1.55rem] font-extrabold leading-tight tracking-normal sm:text-3xl">PRAY WITH 기도 시간을 분양합니다~</h1>
+          <h1 class="brand-title text-[1.55rem] font-extrabold leading-tight tracking-normal sm:text-3xl">단기 선교를 위한 기도 시간을 분양합니다~</h1>
           <p class="mt-1 text-sm font-semibold text-pray-muted" id="connectionStatus">연결 확인 중</p>
         </div>
       </div>
@@ -101,7 +101,7 @@
 
         <label class="field" id="singleDateField">
           <span>날짜</span>
-          <input class="rounded-lg border-slate-300 bg-white px-3 shadow-sm focus:border-pray-green focus:ring-4 focus:ring-pray-green/15" id="eventDate" name="date" type="date" required>
+          <input class="rounded-lg border-slate-300 bg-white px-3 shadow-sm focus:border-pray-green focus:ring-4 focus:ring-pray-green/15" id="eventDate" name="date" type="date" min="2026-08-26" max="2026-10-07" required>
         </label>
 
         <label class="field" id="singleTimeField">
@@ -120,17 +120,17 @@
         </label>
 
         <div class="repeat-panel rounded-lg border border-pray-green/10 bg-gradient-to-b from-pray-warm/80 to-pray-mist/70 p-4" id="repeatControls" hidden>
-          <p class="repeat-range rounded-full border border-pray-green/15 bg-pray-mist px-3 py-1 text-xs font-bold text-pray-deep">2026.06.11 - 2026.08.06</p>
+          <p class="repeat-range rounded-full border border-pray-green/15 bg-pray-mist px-3 py-1 text-xs font-bold text-pray-deep">2026.08.26 - 2026.10.07</p>
 
           <div class="repeat-date-grid">
             <label class="field repeat-date-field">
               <span>반복 시작일</span>
-              <input class="rounded-lg border-slate-300 bg-white px-3 shadow-sm focus:border-pray-green focus:ring-4 focus:ring-pray-green/15" id="repeatStartDate" name="repeatStartDate" type="date" min="2026-06-11" max="2026-08-06">
+              <input class="rounded-lg border-slate-300 bg-white px-3 shadow-sm focus:border-pray-green focus:ring-4 focus:ring-pray-green/15" id="repeatStartDate" name="repeatStartDate" type="date" min="2026-08-26" max="2026-10-07">
             </label>
 
             <label class="field repeat-date-field">
               <span>반복 종료일</span>
-              <input class="rounded-lg border-slate-300 bg-white px-3 shadow-sm focus:border-pray-green focus:ring-4 focus:ring-pray-green/15" id="repeatEndDate" name="repeatEndDate" type="date" min="2026-06-11" max="2026-08-06">
+              <input class="rounded-lg border-slate-300 bg-white px-3 shadow-sm focus:border-pray-green focus:ring-4 focus:ring-pray-green/15" id="repeatEndDate" name="repeatEndDate" type="date" min="2026-08-26" max="2026-10-07">
             </label>
           </div>
 

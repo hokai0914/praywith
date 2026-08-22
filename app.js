@@ -30,8 +30,10 @@ const DEFAULT_START_HOUR = 6;
 const REGISTRATION_END_HOUR = 22;
 const REGISTRATION_END_TIME = "22:00";
 const DEFAULT_END_HOUR = REGISTRATION_END_HOUR;
-const REPEAT_START_DATE = "2026-06-11";
-const REPEAT_END_DATE = "2026-08-06";
+const REGISTRATION_START_DATE = "2026-08-26";
+const REGISTRATION_END_DATE = "2026-10-07";
+const REPEAT_START_DATE = REGISTRATION_START_DATE;
+const REPEAT_END_DATE = REGISTRATION_END_DATE;
 const VIEW_MODES = {
   WEEK: "week",
   MONTH: "month",
@@ -139,6 +141,8 @@ function bindActions() {
 }
 
 function renderRepeatControls() {
+  els.eventDate.min = REGISTRATION_START_DATE;
+  els.eventDate.max = REGISTRATION_END_DATE;
   els.repeatStartDate.min = REPEAT_START_DATE;
   els.repeatStartDate.max = REPEAT_END_DATE;
   els.repeatStartDate.defaultValue = REPEAT_START_DATE;
@@ -585,7 +589,7 @@ function openEventDialog(date, time) {
     return;
   }
   if (!isRegistrationDate(date)) {
-    showToast("일요일은 선택할 수 없습니다.", "error");
+    showToast(getRegistrationDateError(date), "error");
     return;
   }
 
@@ -729,7 +733,7 @@ async function submitEventForm(event) {
     return;
   }
   if (!isRegistrationDate(payload.date)) {
-    showToast("일요일은 선택할 수 없습니다.", "error");
+    showToast(getRegistrationDateError(payload.date), "error");
     return;
   }
 
@@ -954,7 +958,7 @@ function normalizeEventId(value) {
 function normalizeScheduleDate(value, repeatOnly) {
   const date = String(value || "").trim();
   if (!isDateKey(date)) throw new Error("날짜 형식이 올바르지 않습니다.");
-  if (!isRegistrationDate(date)) throw new Error("일요일은 선택할 수 없습니다.");
+  if (!isRegistrationDate(date)) throw new Error(getRegistrationDateError(date));
   if (repeatOnly && !isRepeatDate(date)) throw new Error("반복 등록 기간을 벗어난 날짜입니다.");
   return date;
 }
@@ -1211,7 +1215,16 @@ function isRegistrationSlot(date, time) {
 }
 
 function isRegistrationDate(dateKey) {
-  return isDateKey(dateKey) && parseDate(dateKey).getDay() !== 0;
+  return isDateKey(dateKey) && dateKey >= REGISTRATION_START_DATE && dateKey <= REGISTRATION_END_DATE && parseDate(dateKey).getDay() !== 0;
+}
+
+function getRegistrationDateError(dateKey) {
+  if (!isDateKey(dateKey)) return "날짜 형식이 올바르지 않습니다.";
+  if (dateKey < REGISTRATION_START_DATE || dateKey > REGISTRATION_END_DATE) {
+    return "기도 등록은 2026년 8월 26일부터 2026년 10월 7일까지 가능합니다.";
+  }
+  if (parseDate(dateKey).getDay() === 0) return "일요일은 선택할 수 없습니다.";
+  return "선택할 수 없는 날짜입니다.";
 }
 
 function createElement(tagName, className, text) {
