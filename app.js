@@ -626,7 +626,7 @@ function renderDayDialog(date) {
   } else {
     els.addDayEvent.dataset.alwaysDisabled = "true";
     els.addDayEvent.disabled = true;
-    els.addDayEvent.textContent = "일요일은 등록 불가";
+    els.addDayEvent.textContent = parsedDate.getDay() === 0 ? "일요일은 등록 불가" : "등록 불가";
   }
 }
 

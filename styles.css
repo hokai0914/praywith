@@ -101,8 +101,9 @@ input:focus-visible {
 
 .brand-mark {
   display: grid;
-  width: 46px;
+  min-width: 92px;
   height: 46px;
+  padding: 0 10px;
   place-items: center;
   flex: 0 0 auto;
   border-radius: 8px;
@@ -114,6 +115,9 @@ input:focus-visible {
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 0;
+  line-height: 1.15;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .brand h1 {
@@ -1068,8 +1072,9 @@ input:focus-visible {
   }
 
   body .brand-mark {
-    width: 34px;
+    min-width: 72px;
     height: 34px;
+    padding: 0 7px;
     font-size: 11px;
   }
 
