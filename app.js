@@ -26,9 +26,11 @@ const CLIENT_CONFIG = {
 };
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
-const DEFAULT_START_HOUR = 6;
+const REGISTRATION_START_HOUR = 5;
 const REGISTRATION_END_HOUR = 22;
+const REGISTRATION_START_TIME = "05:00";
 const REGISTRATION_END_TIME = "22:00";
+const DEFAULT_START_HOUR = REGISTRATION_START_HOUR;
 const DEFAULT_END_HOUR = REGISTRATION_END_HOUR;
 const REGISTRATION_START_DATE = "2026-08-26";
 const REGISTRATION_END_DATE = "2026-10-07";
@@ -143,6 +145,7 @@ function bindActions() {
 function renderRepeatControls() {
   els.eventDate.min = REGISTRATION_START_DATE;
   els.eventDate.max = REGISTRATION_END_DATE;
+  els.eventTime.min = REGISTRATION_START_TIME;
   els.repeatStartDate.min = REPEAT_START_DATE;
   els.repeatStartDate.max = REPEAT_END_DATE;
   els.repeatStartDate.defaultValue = REPEAT_START_DATE;
@@ -965,7 +968,7 @@ function normalizeScheduleDate(value, repeatOnly) {
 
 function normalizeScheduleTime(value) {
   const time = normalizeRegistrationTime(String(value || ""));
-  if (!time) throw new Error("시간은 22:00 이하의 정각이어야 합니다.");
+  if (!time) throw new Error("시간은 05:00부터 22:00까지의 정각이어야 합니다.");
   return time;
 }
 
@@ -1178,7 +1181,9 @@ function hourLabel(hour) {
 }
 
 function registrationHourLabel(hour) {
-  return hourLabel(Math.min(REGISTRATION_END_HOUR, Number.parseInt(hour, 10) || 0));
+  const parsedHour = Number.parseInt(hour, 10);
+  const normalized = Number.isInteger(parsedHour) ? parsedHour : REGISTRATION_START_HOUR;
+  return hourLabel(Math.min(REGISTRATION_END_HOUR, Math.max(REGISTRATION_START_HOUR, normalized)));
 }
 
 function normalizeTime(value) {
@@ -1207,7 +1212,8 @@ function isTimeKey(value) {
 
 function isRegistrationTime(value) {
   if (!isTimeKey(value)) return false;
-  return Number.parseInt(value.slice(0, 2), 10) <= REGISTRATION_END_HOUR;
+  const hour = Number.parseInt(value.slice(0, 2), 10);
+  return hour >= REGISTRATION_START_HOUR && hour <= REGISTRATION_END_HOUR;
 }
 
 function isRegistrationSlot(date, time) {

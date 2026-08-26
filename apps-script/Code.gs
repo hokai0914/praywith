@@ -2,6 +2,7 @@ const SHEET_NAME = 'Schedules';
 const SPREADSHEET_ID_PROPERTY = 'SCHEDULE_SPREADSHEET_ID';
 const DATA_VERSION_PROPERTY = 'SCHEDULE_DATA_VERSION';
 const HEADERS = ['id', 'date', 'time', 'personName', 'completed', 'createdAt', 'updatedAt'];
+const REGISTRATION_START_HOUR = 5;
 const REGISTRATION_END_HOUR = 22;
 const REGISTRATION_START_DATE = '2026-08-26';
 const REGISTRATION_END_DATE = '2026-10-07';
@@ -283,7 +284,7 @@ function normalizeTime_(value) {
 
   const hour = Number(match[1]);
   const minute = match[2] || '00';
-  if (hour < 0 || hour > REGISTRATION_END_HOUR) throw new Error('Time hour is out of range.');
+  if (hour < REGISTRATION_START_HOUR || hour > REGISTRATION_END_HOUR) throw new Error('Time hour is out of range.');
   if (minute !== '00') throw new Error('Time must be an hourly slot.');
   return `${String(hour).padStart(2, '0')}:00`;
 }

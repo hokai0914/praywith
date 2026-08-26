@@ -47,7 +47,7 @@ id,date,time,personName,completed,createdAt,updatedAt
 
 - 문서 ID와 `id` 필드는 동일합니다.
 - `date`는 `YYYY-MM-DD` 문자열입니다.
-- `time`은 `HH:00` 문자열이며 등록은 `22:00`까지만 허용합니다.
+- `time`은 `HH:00` 문자열이며 등록은 `05:00`부터 `22:00`까지만 허용합니다.
 - 같은 `date + time` 조합은 중복 등록됩니다.
 - 완료 체크와 삭제는 `id` 기준으로 처리됩니다.
 
