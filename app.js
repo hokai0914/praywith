@@ -28,8 +28,6 @@ const CLIENT_CONFIG = {
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 const REGISTRATION_START_HOUR = 5;
 const REGISTRATION_END_HOUR = 22;
-const REGISTRATION_START_TIME = "05:00";
-const REGISTRATION_END_TIME = "22:00";
 const DEFAULT_START_HOUR = REGISTRATION_START_HOUR;
 const DEFAULT_END_HOUR = REGISTRATION_END_HOUR;
 const REGISTRATION_START_DATE = "2026-08-26";
@@ -145,7 +143,7 @@ function bindActions() {
 function renderRepeatControls() {
   els.eventDate.min = REGISTRATION_START_DATE;
   els.eventDate.max = REGISTRATION_END_DATE;
-  els.eventTime.min = REGISTRATION_START_TIME;
+  renderEventTimeOptions();
   els.repeatStartDate.min = REPEAT_START_DATE;
   els.repeatStartDate.max = REPEAT_END_DATE;
   els.repeatStartDate.defaultValue = REPEAT_START_DATE;
@@ -164,6 +162,17 @@ function renderRepeatControls() {
   for (let hour = DEFAULT_START_HOUR; hour <= REGISTRATION_END_HOUR; hour += 1) {
     const time = hourLabel(hour);
     els.repeatTimes.append(createChoice("repeatTimes", time, time));
+  }
+}
+
+function renderEventTimeOptions() {
+  els.eventTime.innerHTML = "";
+  for (let hour = REGISTRATION_START_HOUR; hour <= REGISTRATION_END_HOUR; hour += 1) {
+    const time = hourLabel(hour);
+    const option = document.createElement("option");
+    option.value = time;
+    option.textContent = time;
+    els.eventTime.append(option);
   }
 }
 
@@ -237,7 +246,7 @@ function getScheduleDocument(id) {
 
 function setLoading(isLoading) {
   state.loading = isLoading;
-  document.querySelectorAll("button, input").forEach((control) => {
+  document.querySelectorAll("button, input, select").forEach((control) => {
     control.disabled = control.dataset.alwaysDisabled === "true" || isLoading || isFormModeDisabled(control);
   });
 }
@@ -598,7 +607,7 @@ function openEventDialog(date, time) {
 
   els.eventForm.reset();
   els.eventDate.value = date;
-  els.eventTime.value = normalizeRegistrationTime(time) || REGISTRATION_END_TIME;
+  els.eventTime.value = normalizeRegistrationTime(time) || hourLabel(REGISTRATION_START_HOUR);
   els.repeatEnabled.checked = false;
   selectRepeatDefaults(date, els.eventTime.value);
   syncEventFormMode();
